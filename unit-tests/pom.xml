@@ -3,27 +3,27 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>sola-services</artifactId>
-        <groupId>org.sola</groupId>
-        <version>1503a</version>
+        <artifactId>sola-cs-services</artifactId>
+        <groupId>org.sola.cs</groupId>
+        <version>1504a</version>
     </parent>
-    <groupId>org.sola.services</groupId>
-    <artifactId>sola-unit-tests</artifactId>
-    <version>1503a</version>
-    <name>Services Unit Tests</name>
+    <groupId>org.sola.cs.services</groupId>
+    <artifactId>sola-cs-unit-tests</artifactId>
+    <version>1504a</version>
+    <name>Services CS Unit Tests</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.sola.services.ejbs</groupId>
-            <artifactId>sola-application</artifactId>
+            <groupId>org.sola.cs.services.ejbs</groupId>
+            <artifactId>sola-cs-application</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
             </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>sola-test-common</artifactId>
+            <artifactId>sola-cs-test-common</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -35,19 +35,19 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}.ejbs</groupId>
-            <artifactId>sola-address</artifactId>
+            <artifactId>sola-cs-address</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>sola-services-common</artifactId>
+            <artifactId>sola-cs-services-common</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}.boundary</groupId>
-            <artifactId>sola-transfer-objects</artifactId>
+            <artifactId>sola-cs-transfer-objects</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

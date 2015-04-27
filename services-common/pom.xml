@@ -3,17 +3,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>sola-services</artifactId>
-        <groupId>org.sola</groupId>
-        <version>1503a</version>
+        <artifactId>sola-cs-services</artifactId>
+        <groupId>org.sola.cs</groupId>
+        <version>1504a</version>
     </parent>
 
-    <groupId>org.sola.services</groupId>
-    <artifactId>sola-services-common</artifactId>
-    <version>1503a</version>
+    <groupId>org.sola.cs.services</groupId>
+    <artifactId>sola-cs-services-common</artifactId>
+    <version>1504a</version>
     <packaging>jar</packaging>
 
-    <name>Services Common</name>
+    <name>Services CS Common</name>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -22,18 +22,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.sola.common</groupId>
-            <artifactId>sola-common</artifactId>
+            <groupId>org.sola.cs.common</groupId>
+            <artifactId>sola-cs-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.sola.common</groupId>
-            <artifactId>sola-messaging</artifactId>
+            <groupId>org.sola.cs.common</groupId>
+            <artifactId>sola-cs-messaging</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.sola.services</groupId>
-            <artifactId>sola-cache</artifactId>
+            <groupId>org.sola.cs.services</groupId>
+            <artifactId>sola-cs-cache</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

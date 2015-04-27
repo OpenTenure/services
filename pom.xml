@@ -2,22 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>sola-main</artifactId>
-        <groupId>org.sola</groupId>
-        <version>1503a</version>
+        <artifactId>sola-cs-main</artifactId>
+        <groupId>org.sola.cs</groupId>
+        <version>1504a</version>
     </parent>
-    <groupId>org.sola</groupId>
-    <artifactId>sola-services</artifactId>
+    <groupId>org.sola.cs</groupId>
+    <artifactId>sola-cs-services</artifactId>
     <packaging>pom</packaging>
-    <version>1503a</version>
-    <name>Services POM</name>
+    <version>1504a</version>
+    <name>Services CS POM</name>
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     </properties>
     <modules>
         <!-- Common Projects -->
-        <module>../common/rules</module>
         <module>../common/common</module>
+        <module>../common/messaging</module>
         <module>cache</module>
         <!-- Service Utility Projects -->
         <module>services-common</module>

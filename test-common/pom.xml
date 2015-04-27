@@ -3,17 +3,17 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>sola-services</artifactId>
-        <groupId>org.sola</groupId>
-        <version>1503a</version>
+        <artifactId>sola-cs-services</artifactId>
+        <groupId>org.sola.cs</groupId>
+        <version>1504a</version>
     </parent>
 
-    <groupId>org.sola.services</groupId>
-    <artifactId>sola-test-common</artifactId>
-    <version>1503a</version>
+    <groupId>org.sola.cs.services</groupId>
+    <artifactId>sola-cs-test-common</artifactId>
+    <version>1504a</version>
     <packaging>jar</packaging>
 
-    <name>Services Test Common</name>
+    <name>Services CS Test Common</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>sola-services-common</artifactId>
+            <artifactId>sola-cs-services-common</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
