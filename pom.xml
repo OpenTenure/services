@@ -28,7 +28,6 @@
         <!-- Boundary Projects -->
         <module>boundary</module>
         <!-- Test Projects -->
-        <module>unit-tests</module>
         <module>test-common</module>
     </modules>
 </project>
