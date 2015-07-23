@@ -963,7 +963,12 @@ public class SearchEJB extends AbstractEJB implements SearchEJBLocal {
         params.put(CommonSqlProvider.PARAM_QUERY, ClaimSearchResult.QUERY_SEARCH_BY_POINT);
         params.put(ClaimSearchResult.PARAM_POINT, point);
         params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
-        return getRepository().getEntity(ClaimSearchResult.class, params);
+        List<ClaimSearchResult> list = getRepository().getEntityList(ClaimSearchResult.class, params);
+        if(list == null){
+            return null;
+        } else {
+            return list.get(0);
+        }
     }
 
     /**

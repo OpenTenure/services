@@ -15,6 +15,7 @@ public class ClaimPermissions {
     boolean canAddDocumentsToClaim = false;
     boolean canSubmitClaim = false;
     boolean canChallengeClaim = false;
+    boolean canRevert = false;
     
     public ClaimPermissions(){
     }
@@ -105,5 +106,13 @@ public class ClaimPermissions {
 
     public void setCanChallengeClaim(boolean canChallengeClaim) {
         this.canChallengeClaim = canChallengeClaim;
+    }
+
+    public boolean isCanRevert() {
+        return canRevert;
+    }
+
+    public void setCanRevert(boolean canRevert) {
+        this.canRevert = canRevert;
     }
 }

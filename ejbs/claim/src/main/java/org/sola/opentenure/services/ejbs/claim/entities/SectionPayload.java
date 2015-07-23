@@ -5,9 +5,11 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.sola.services.common.repository.ChildEntityList;
+import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 
 @Table(schema = "opentenure", name = "section_payload")
+@DefaultSorter(sortString = "item_order")
 public class SectionPayload extends AbstractVersionedEntity {
     @Id
     @Column(name = "id")
@@ -28,6 +30,8 @@ public class SectionPayload extends AbstractVersionedEntity {
     private int minOccurrences;
     @ChildEntityList(parentIdField = "sectionPayloadId", cascadeDelete = true)
     private List<SectionElementPayload> sectionElementPayloadList;
+    @Column(name="item_order")
+    private int itemOrder;
     
     public String getId() {
         return id;
@@ -99,6 +103,14 @@ public class SectionPayload extends AbstractVersionedEntity {
 
     public void setSectionElementPayloadList(List<SectionElementPayload> sectionElementPayloadList) {
         this.sectionElementPayloadList = sectionElementPayloadList;
+    }
+
+    public int getItemOrder() {
+        return itemOrder;
+    }
+
+    public void setItemOrder(int itemOrder) {
+        this.itemOrder = itemOrder;
     }
     
     public SectionPayload(){

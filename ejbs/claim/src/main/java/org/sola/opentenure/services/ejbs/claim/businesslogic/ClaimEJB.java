@@ -1,9 +1,9 @@
 package org.sola.opentenure.services.ejbs.claim.businesslogic;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1541,17 +1541,30 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return true;
         }
 
-        if (statusCode.equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)) {
+        if (statusCode.equalsIgnoreCase(ClaimStatusConstants.UNMODERATED) &&
+                claimStatusChanger.getLodgementDate() == null) {
             claimStatusChanger.setLodgementDate(Calendar.getInstance().getTime());
             claimStatusChanger.setChallengeExpiryDate(Calendar.getInstance().getTime());
-            int days = Integer.parseInt(systemEjb.getSetting(ConfigConstants.MODERATION_DAYS, "30"));
+            
             // Assign same expiration date to challenging claim
             if (challengedClaim != null) {
                 claimStatusChanger.setChallengeExpiryDate(challengedClaim.getChallengeExpiryDate());
             } else {
-                Calendar cal = Calendar.getInstance();
-                cal.add(Calendar.DATE, days);
-                claimStatusChanger.setChallengeExpiryDate(cal.getTime());
+                String challengeExpiryDateString = systemEjb.getSetting(ConfigConstants.MODERATION_DATE, "");
+                Date challengeExpiryDate = null;
+                
+                if(!StringUtility.isEmpty(challengeExpiryDateString)){
+                    challengeExpiryDate = DateUtility.convertToDate(challengeExpiryDateString, "yyyy-MM-dd");
+                } 
+                
+                if(challengeExpiryDate != null && challengeExpiryDate.after(Calendar.getInstance().getTime())){
+                    claimStatusChanger.setChallengeExpiryDate(challengeExpiryDate);
+                } else {
+                    int days = Integer.parseInt(systemEjb.getSetting(ConfigConstants.MODERATION_DAYS, "30"));
+                    Calendar cal = Calendar.getInstance();
+                    cal.add(Calendar.DATE, days);
+                    claimStatusChanger.setChallengeExpiryDate(cal.getTime());
+                }
             }
         }
 
@@ -1650,6 +1663,32 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             sendNotification(claim, challenges, challengedClaim, body, subject);
 
             return true;
+        }
+        return false;
+    }
+    
+    @Override
+    @RolesAllowed({RolesConstants.CS_MODERATE_CLAIM})
+    public boolean revertClaimReview(String claimId){
+        if (StringUtility.isEmpty(claimId)) {
+            return false;
+        }
+
+        Claim claim = getRepository().getEntity(Claim.class, claimId);
+        if (!canRevertClaimReview(claim, true)) {
+            return false;
+        }
+
+        // Revert claim review
+        if(changeClaimStatus(claimId, null, ClaimStatusConstants.UNMODERATED, null)){
+            List<Claim> challenges = getChallengingClaimsByChallengedId(claimId);
+            if (challenges != null && challenges.size() > 0) {
+                for (Claim challenge : challenges) {
+                    if (challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.REVIEWED)) {
+                        changeClaimStatus(challenge.getId(), null, ClaimStatusConstants.UNMODERATED, null);
+                    }
+                }
+            }
         }
         return false;
     }
@@ -1958,6 +1997,46 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
+    public boolean canRevertClaimReview(String claimId){
+        return canRevertClaimReview(getRepository().getEntity(Claim.class, claimId), false);
+    }
+    
+    private boolean canRevertClaimReview(Claim claim, boolean throwException){
+        if (claim == null) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
+            }
+            return false;
+        }
+
+        // Check user role
+        if (!isInRole(RolesConstants.CS_MODERATE_CLAIM)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.EXCEPTION_INSUFFICIENT_RIGHTS);
+            }
+            return false;
+        }
+
+        // Check user is assigned to the claim
+        String userName = getUserName();
+        if (!StringUtility.empty(claim.getAssigneeName()).equalsIgnoreCase(userName)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_ASSIGNED_TO_OTHER_USER);
+            }
+            return false;
+        }
+
+        // Check claim review can be approved
+        if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.REVIEWED)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CANT_REVERT);
+            }
+            return false;
+        }
+        return true;
+    }
+    
+    @Override
     @RolesAllowed({RolesConstants.CS_RECORD_CLAIM})
     public void addClaimAttachment(String claimId, String attachmentId) {
         Claim claim = getRepository().getEntity(Claim.class, claimId);
@@ -2012,6 +2091,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         permissions.setCanAddDocumentsToClaim(canAddDocumentsToClaim(claim, false));
         permissions.setCanSubmitClaim(canSubmitClaim(claim, false));
         permissions.setCanChallengeClaim(canChallengeClaim(claim, false));
+        permissions.setCanRevert(canRevertClaimReview(claim, false));
         return permissions;
     }
 

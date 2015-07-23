@@ -39,6 +39,7 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     boolean withdrawClaim(String claimId);
     boolean rejectClaim(String claimId, String rejectionReasonCode);
     boolean approveClaimReview(String claimId);
+    boolean revertClaimReview(String claimId);
     boolean approveClaimModeration(String claimId);
     boolean assignClaim(String claimId);
     boolean unAssignClaim(String claimId);
@@ -53,6 +54,7 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     boolean canAddDocumentsToClaim(String claimId);
     boolean canSubmitClaim(String claimId);
     boolean canChallengeClaim(String claimId);
+    boolean canRevertClaimReview(String claimId);
     boolean submitClaim(String claimId, String languageCode);
     void addClaimAttachment(String claimId, String attachmentId);
     ClaimPermissions getClaimPermissions(String claimId);

@@ -8,9 +8,11 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.sola.common.StringUtility;
+import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 
 @Table(schema = "opentenure", name = "field_payload")
+@DefaultSorter(sortString = "item_order")
 public class FieldPayload extends AbstractVersionedEntity {
     @Id
     @Column(name = "id")
@@ -31,7 +33,9 @@ public class FieldPayload extends AbstractVersionedEntity {
     private boolean booleanPayload;
     @Column(name="field_value_type")
     private String fieldValueType;
-
+    @Column(name="item_order")
+    private int itemOrder;
+    
     public String getId() {
         return id;
     }
@@ -102,6 +106,14 @@ public class FieldPayload extends AbstractVersionedEntity {
 
     public void setFieldValueType(String fieldValueType) {
         this.fieldValueType = fieldValueType;
+    }
+
+    public int getItemOrder() {
+        return itemOrder;
+    }
+
+    public void setItemOrder(int itemOrder) {
+        this.itemOrder = itemOrder;
     }
     
     public FieldPayload(){

@@ -27,6 +27,7 @@
  */
 package org.sola.services.ejb.refdata.entities;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -34,6 +35,7 @@ import org.sola.services.common.repository.Localized;
 import org.sola.services.common.repository.entities.AbstractEntity;
 
 @Table(name = "language", schema = "system")
+@Cacheable
 public class Language extends AbstractEntity {
     
     @Id

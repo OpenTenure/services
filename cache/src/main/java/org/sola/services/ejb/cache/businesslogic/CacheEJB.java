@@ -125,7 +125,29 @@ public class CacheEJB implements CacheEJBLocal {
         LogUtility.log("Get from cache > " + key, Level.INFO);
         return isCachedList(key) ? (List<T>) cache.get(key) : null;
     }
+    
+    /**
+     * Retrieves an object from the cache
+     *
+     * @param <T>
+     * @param key Cache key
+     * @return
+     */
+    @Override
+    public <T> T get(String key){
+        LogUtility.log("Get from cache > " + key, Level.INFO);
+        return (T)cache.get(key);
+    }
 
+    /**
+     * Returns true if provided key contains in the cache. Otherwise false is returned.
+     * @param key Key name to search in the cache
+     */
+    @Override
+    public boolean containsKey(String key){
+        return cache.containsKey(key);
+    }
+    
     /**
      * Stores the list into the cache. This method creates a WRITE lock blocking
      * all other access until it is completed.
@@ -148,6 +170,28 @@ public class CacheEJB implements CacheEJBLocal {
         cache.put(key, list);
     }
 
+    /**
+     * Stores the object into the cache. This method creates a WRITE lock blocking
+     * all other access until it is completed.
+     *
+     * If the cache already contains an entry for the key, the entry is removed
+     * and the new list replaces the original.
+     *
+     * @param <T>
+     * @param key Cache key determined using the
+     * {@linkplain #getKey(java.lang.Class, java.lang.String) getKey} method
+     * @param object Object to cache.
+     */
+    @Lock(LockType.WRITE)
+    @Override
+    public <T> void put(String key, T object) {
+        LogUtility.log("Put in cache > " + key, Level.INFO);
+        if (cache.containsKey(key)) {
+            clearEntry(key);
+        }
+        cache.put(key, object);
+    }
+    
     /**
      * Removes a specific entry as identified by the key from the cache. This
      * method has been extracted from the

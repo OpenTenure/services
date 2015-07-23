@@ -6,10 +6,12 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.sola.services.common.repository.ChildEntityList;
+import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.Localized;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 
 @Table(schema = "opentenure", name = "field_template")
+@DefaultSorter(sortString = "item_order")
 public class FieldTemplate extends AbstractVersionedEntity {
     @Id
     @Column(name = "id")
@@ -28,6 +30,8 @@ public class FieldTemplate extends AbstractVersionedEntity {
     private String hint;
     @ChildEntityList(parentIdField = "fieldTemplateId", cascadeDelete = true)
     private List<FieldConstraint> fieldConstraintList;
+    @Column(name="item_order")
+    private int itemOrder;
     
     public String getId() {
         return id;
@@ -83,6 +87,14 @@ public class FieldTemplate extends AbstractVersionedEntity {
 
     public void setFieldConstraintList(List<FieldConstraint> fieldConstraintList) {
         this.fieldConstraintList = fieldConstraintList;
+    }
+
+    public int getItemOrder() {
+        return itemOrder;
+    }
+
+    public void setItemOrder(int itemOrder) {
+        this.itemOrder = itemOrder;
     }
 
     /** Returns true if field is mandatory, otherwise false. This method interrogates list of constraints on the field. */

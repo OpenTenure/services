@@ -3,10 +3,12 @@ package org.sola.opentenure.services.ejbs.claim.entities;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.Localized;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 
 @Table(schema = "opentenure", name = "field_constraint_option")
+@DefaultSorter(sortString = "item_order")
 public class FieldConstraintOption extends AbstractVersionedEntity {
     @Id
     @Column(name = "id")
@@ -18,6 +20,8 @@ public class FieldConstraintOption extends AbstractVersionedEntity {
     private String displayName;
     @Column(name="field_constraint_id")
     private String fieldConstraintId;
+    @Column(name="item_order")
+    private int itemOrder;
 
     public String getId() {
         return id;
@@ -49,6 +53,14 @@ public class FieldConstraintOption extends AbstractVersionedEntity {
 
     public void setFieldConstraintId(String fieldConstraintId) {
         this.fieldConstraintId = fieldConstraintId;
+    }
+
+    public int getItemOrder() {
+        return itemOrder;
+    }
+
+    public void setItemOrder(int itemOrder) {
+        this.itemOrder = itemOrder;
     }
     
     public FieldConstraintOption(){

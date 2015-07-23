@@ -47,6 +47,12 @@ public interface CacheEJBLocal {
 
     <T> void putList(String key, List<T> list);
 
+    <T> void put(String key, T object);
+    
+    <T> T get(String key);
+    
+    boolean containsKey(String key);
+    
     void clearEntityLists(Class entityClass);
 
     void clear(String key);

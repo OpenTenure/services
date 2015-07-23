@@ -5,10 +5,12 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.sola.services.common.repository.ChildEntityList;
+import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.Localized;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 
 @Table(schema = "opentenure", name = "section_template")
+@DefaultSorter(sortString = "item_order")
 public class SectionTemplate extends AbstractVersionedEntity {
     @Id
     @Column(name = "id")
@@ -34,6 +36,8 @@ public class SectionTemplate extends AbstractVersionedEntity {
     private String elementDisplayName;
     @ChildEntityList(parentIdField = "sectionTemplateId", cascadeDelete = true)
     private List<FieldTemplate> fieldTemplateList;
+    @Column(name="item_order")
+    private int itemOrder;
     
     public String getId() {
         return id;
@@ -120,6 +124,14 @@ public class SectionTemplate extends AbstractVersionedEntity {
 
     public void setFieldTemplateList(List<FieldTemplate> fieldTemplateList) {
         this.fieldTemplateList = fieldTemplateList;
+    }
+
+    public int getItemOrder() {
+        return itemOrder;
+    }
+
+    public void setItemOrder(int itemOrder) {
+        this.itemOrder = itemOrder;
     }
 
     public SectionTemplate(){
