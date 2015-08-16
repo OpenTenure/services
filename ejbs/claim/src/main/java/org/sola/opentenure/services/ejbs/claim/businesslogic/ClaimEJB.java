@@ -263,7 +263,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
         }
 
-        if (fullValidation && StringUtility.isEmpty(claim.getMappedGeometry())) {
+        String requireSpatial = systemEjb.getSetting(ConfigConstants.REQUIRES_SPATIAL, "1");
+        
+        if (fullValidation && requireSpatial.equals("1") && 
+                StringUtility.isEmpty(claim.getMappedGeometry())) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_GEOMETRY_REQUIERD);
             } else {
