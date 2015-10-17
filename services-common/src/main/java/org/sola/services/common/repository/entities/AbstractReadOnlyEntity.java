@@ -40,7 +40,7 @@ import java.sql.Array;
 import java.util.Map;
 import org.sola.common.RolesConstants;
 import org.sola.common.SOLAException;
-import org.sola.common.messaging.ServiceMessage;
+import org.sola.cs.common.messaging.ServiceMessage;
 import org.sola.services.common.LocalInfo;
 import org.sola.services.common.repository.CommonRepository;
 import org.sola.services.common.repository.CommonSqlProvider;
@@ -71,10 +71,10 @@ public abstract class AbstractReadOnlyEntity implements Serializable {
      * The name of the column that contains the redact code assigned to the
      * entity. If a redact code is set on the entity and the user does not have
      * the matching SOLA Security Role, the fields on the entity marked with the
-     * {@linkplain org.sola.services.common.repository.Redact} annotation will
+     * {@link org.sola.services.common.repository.Redact} annotation will
      * be redacted. Entity fields may also be redacted in bulk if the user does
      * not have a Security Classifications matching the list of classifications
-     * identified on the {@linkplain org.sola.services.common.repository.Redact}
+     * identified on the {@link org.sola.services.common.repository.Redact}
      * annotation.
      */
     public static final String REDACT_CODE_COLUMN_NAME = "redact_code";
@@ -242,8 +242,8 @@ public abstract class AbstractReadOnlyEntity implements Serializable {
 
     /**
      * @return The list of fields on the entity marked with the
-     * {@linkplain org.sola.services.common.repository.ChildEntity} and/or
-     * {@linkplain org.sola.services.common.repository.ChildEntityList}
+     * {@link org.sola.services.common.repository.ChildEntity} and/or
+     * {@link org.sola.services.common.repository.ChildEntityList}
      * annotation.
      */
     public List<ChildEntityInfo> getChildEntityInfo() {

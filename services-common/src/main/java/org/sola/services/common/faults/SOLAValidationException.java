@@ -32,7 +32,7 @@
 package org.sola.services.common.faults;
 
 import java.util.List;
-import org.sola.common.messaging.ServiceMessage;
+import org.sola.cs.common.messaging.ServiceMessage;
 import org.sola.services.common.br.ValidationResult;
 
 /**

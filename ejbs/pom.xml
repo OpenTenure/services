@@ -20,7 +20,6 @@
         <!-- EJB Projects -->
         <module>system</module>
         <module>search</module>
-        <module>scheduler</module>
         <module>admin</module>
         <module>refdata</module>
         <module>claim</module>

@@ -39,10 +39,6 @@
                         </ejbModule>
                         <ejbModule>
                             <groupId>${project.groupId}.ejbs</groupId>
-                            <artifactId>sola-cs-scheduler</artifactId>
-                        </ejbModule>
-                        <ejbModule>
-                            <groupId>${project.groupId}.ejbs</groupId>
                             <artifactId>sola-cs-claim</artifactId>
                         </ejbModule>
                         <ejbModule>
@@ -183,13 +179,7 @@
             <version>${project.version}</version>
             <type>ejb</type>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}.ejbs</groupId>
-            <artifactId>sola-cs-scheduler</artifactId>
-            <version>${project.version}</version>
-            <type>ejb</type>
-        </dependency>
-        <dependency>
+         <dependency>
             <groupId>${project.groupId}.boundary</groupId>
             <artifactId>sola-cs-transfer-objects</artifactId>
             <version>${project.version}</version>

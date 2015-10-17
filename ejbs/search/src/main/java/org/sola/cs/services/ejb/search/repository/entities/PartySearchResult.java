@@ -1,0 +1,159 @@
+/**
+ * ******************************************************************************************
+ * Copyright (C) 2014 - Food and Agriculture Organization of the United Nations (FAO).
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ *    1. Redistributions of source code must retain the above copyright notice,this list
+ *       of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright notice,this list
+ *       of conditions and the following disclaimer in the documentation and/or other
+ *       materials provided with the distribution.
+ *    3. Neither the name of FAO nor the names of its contributors may be used to endorse or
+ *       promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,PROCUREMENT
+ * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,STRICT LIABILITY,OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * *********************************************************************************************
+ */
+package org.sola.cs.services.ejb.search.repository.entities;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import org.sola.services.common.repository.AccessFunctions;
+import org.sola.services.common.repository.CommonSqlProvider;
+import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
+
+@Entity
+@Table(name = "party", schema = "party")
+public class PartySearchResult extends AbstractReadOnlyEntity {
+
+    public static final String QUERY_PARAM_NAME = "name";
+    public static final String QUERY_PARAM_TYPE_CODE = "typeCode";
+    public static final String QUERY_PARAM_ROLE_TYPE_CODE = "roleTypeCode";
+    public static final String SEARCH_QUERY =
+            "SELECT distinct p.id, p.name, p.last_name, p.ext_id, p.type_code, "
+            + "(SELECT CASE (SELECT COUNT(1) FROM administrative.party_for_rrr ap "
+            + "WHERE ap.party_id = p.id) WHEN 0 THEN false ELSE true END) AS is_rightholder, "
+            + "(SELECT string_agg(get_translation(r.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}), ', ') "
+            + "FROM party.party_role_type r "
+            + "INNER JOIN party.party_role pr2 ON r.code = pr2.type_code "
+            + "WHERE pr2.party_id = p.id) as roles, "
+            + "p.classification_code, p.redact_code "
+            + "FROM party.party p LEFT JOIN party.party_role pr ON p.id = pr.party_id "
+            + "WHERE (CASE WHEN #{" + QUERY_PARAM_NAME + "} = '' THEN true ELSE "
+            + "compare_strings(#{" + QUERY_PARAM_NAME + "}, COALESCE(p.name, '') || ' ' "
+            + "|| COALESCE(p.last_name, '') || ' ' || COALESCE(p.alias, '')) END) "
+            + "AND (#{" + QUERY_PARAM_TYPE_CODE + "} = '' OR LOWER(p.type_code) = LOWER(#{" + QUERY_PARAM_TYPE_CODE + "})) "
+            + "AND POSITION(LOWER(#{" + QUERY_PARAM_ROLE_TYPE_CODE + "}) in LOWER(COALESCE(pr.type_code, ''))) > 0 "
+            + "ORDER BY p.name, p.last_name "
+            + "LIMIT 101";
+    @Id
+    @Column
+    private String id;
+    @Column(name = "name")
+    private String name;
+    @Column(name = "last_name")
+    private String lastName;
+    @Column(name = "ext_id")
+    private String extId;
+    @Column(name = "type_code")
+    private String typeCode;
+    @Column(name = "is_rightholder")
+    private boolean rightHolder;
+    @Column(name = "roles")
+    private String roles;
+    @Column(name = AbstractReadOnlyEntity.CLASSIFICATION_CODE_COLUMN_NAME)
+    private String classificationCode;
+    @Column(name = AbstractReadOnlyEntity.REDACT_CODE_COLUMN_NAME)
+    private String redactCode;
+    
+    public PartySearchResult() {
+        super();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getExtId() {
+        return extId;
+    }
+
+    public void setExtId(String extId) {
+        this.extId = extId;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getTypeCode() {
+        return typeCode;
+    }
+
+    public void setTypeCode(String typeCode) {
+        this.typeCode = typeCode;
+    }
+
+    public boolean isRightHolder() {
+        return rightHolder;
+    }
+
+    public void setRightHolder(boolean rightHolder) {
+        this.rightHolder = rightHolder;
+    }
+
+    public String getRoles() {
+        return roles;
+    }
+
+    public void setRoles(String roles) {
+        this.roles = roles;
+    }
+    
+    @Override
+    public String getClassificationCode() {
+        return classificationCode;
+    }
+
+    @Override
+    public String getRedactCode() {
+        return redactCode;
+    }
+
+    public void setClassificationCode(String classificationCode) {
+        this.classificationCode = classificationCode;
+    }
+
+    public void setRedactCode(String redactCode) {
+        this.redactCode = redactCode;
+    }
+}

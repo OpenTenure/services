@@ -32,7 +32,7 @@
 package org.sola.services.common.repository;
 
 import org.sola.common.SOLAException;
-import org.sola.common.messaging.ServiceMessage;
+import org.sola.cs.common.messaging.ServiceMessage;
 import java.util.ArrayList;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 import java.util.List;

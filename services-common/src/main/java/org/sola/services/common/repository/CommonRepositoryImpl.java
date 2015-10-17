@@ -29,6 +29,13 @@
  */
 package org.sola.services.common.repository;
 
+import org.sola.services.common.repository.entities.AbstractCodeEntity;
+import org.sola.services.common.repository.entities.AbstractEntity;
+import org.sola.services.common.repository.entities.ColumnInfo;
+import org.sola.services.common.repository.entities.AbstractVersionedEntity;
+import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
+import org.sola.services.common.repository.entities.AbstractEntityInfo;
+import org.sola.services.common.repository.entities.ChildEntityInfo;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
@@ -40,13 +47,12 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.sola.common.SOLAException;
 import org.sola.common.StringUtility;
-import org.sola.common.messaging.ServiceMessage;
+import org.sola.cs.common.messaging.ServiceMessage;
 import org.sola.services.common.EntityAction;
 import org.sola.services.common.LocalInfo;
 import org.sola.services.common.ejbs.AbstractEJBLocal;
 import org.sola.services.common.faults.FaultUtility;
-import org.sola.services.common.repository.entities.*;
-import org.sola.services.ejb.cache.businesslogic.CacheEJBLocal;
+import org.sola.cs.services.ejb.cache.businesslogic.CacheCSEJBLocal;
 
 /**
  * Implementation of the {@linkplain CommonRepository} interface that uses the
@@ -62,7 +68,7 @@ public class CommonRepositoryImpl implements CommonRepository {
      */
     private static final String LOAD_INHIBITORS = "Repository.loadInhibitors";
     private DatabaseConnectionManager dbConnectionManager = null;
-    CacheEJBLocal cache;
+    CacheCSEJBLocal cache;
 
     /**
      * Loads the myBatis configuration file and initializes a connection to the
@@ -96,9 +102,9 @@ public class CommonRepositoryImpl implements CommonRepository {
      *
      * @return
      */
-    public CacheEJBLocal getCache() {
+    public CacheCSEJBLocal getCache() {
         if (cache == null) {
-            cache = RepositoryUtility.getEJB(CacheEJBLocal.class);
+            cache = RepositoryUtility.getEJB(CacheCSEJBLocal.class);
         }
         return cache;
     }
