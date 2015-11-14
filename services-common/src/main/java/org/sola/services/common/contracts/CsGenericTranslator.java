@@ -41,9 +41,9 @@ import org.sola.common.mapping.MappingUtility;
  * @see MappingManager
  * @see #getMapper()
  */
-public final class GenericTranslator {
+public final class CsGenericTranslator {
 
-    private static final String SERVICE_MAPPING_CONFIG = "/dozerMappingConfigServices.xml";
+    private static final String SERVICE_MAPPING_CONFIG = "/csDozerMappingConfigServices.xml";
 
     /**
      * Obtains an instance of the Mapper and sets the GenericTranslatorListener as well as the extra
@@ -51,7 +51,7 @@ public final class GenericTranslator {
      * mapping config file for services</li></ul></p>
      */
     public static Mapper getMapper() {
-        String serviceMappingConfigFile = GenericTranslator.class.getResource(SERVICE_MAPPING_CONFIG).toString();
+        String serviceMappingConfigFile = CsGenericTranslator.class.getResource(SERVICE_MAPPING_CONFIG).toString();
         return MappingManager.getMapper(new GenericTranslatorListener(), serviceMappingConfigFile);
     }
 
