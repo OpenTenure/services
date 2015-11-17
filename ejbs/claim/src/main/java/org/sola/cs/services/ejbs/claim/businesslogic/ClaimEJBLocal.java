@@ -65,5 +65,4 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     List<FieldValueType> getFieldValueTypes(String languageCode);
     List<FieldConstraintType> getFieldConstraintTypes(String languageCode);
     boolean checkFormTemplateHasPayload(String formName);
-    FormTemplate saveFormTemplate(FormTemplate form);
 }

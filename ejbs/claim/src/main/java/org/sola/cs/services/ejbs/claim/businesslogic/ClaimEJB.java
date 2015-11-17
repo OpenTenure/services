@@ -2171,10 +2171,4 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     public List<FieldConstraintType> getFieldConstraintTypes(String languageCode) {
         return getRepository().getCodeList(FieldConstraintType.class, languageCode);
     }
-
-    @Override
-    @RolesAllowed({RolesConstants.ADMIN_MANAGE_SETTINGS})
-    public FormTemplate saveFormTemplate(FormTemplate form) {
-        return getRepository().saveEntity(form);
-    }
 }
