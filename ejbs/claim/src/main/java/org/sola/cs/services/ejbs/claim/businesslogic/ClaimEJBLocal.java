@@ -1,11 +1,13 @@
 package org.sola.cs.services.ejbs.claim.businesslogic;
 
+import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.ejb.Local;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentBinary;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentChunk;
 import org.sola.cs.services.ejbs.claim.entities.Claim;
 import org.sola.cs.services.ejbs.claim.entities.ClaimPermissions;
+import org.sola.cs.services.ejbs.claim.entities.ClaimSpatial;
 import org.sola.cs.services.ejbs.claim.entities.ClaimStatus;
 import org.sola.cs.services.ejbs.claim.entities.FieldConstraintType;
 import org.sola.cs.services.ejbs.claim.entities.FieldType;

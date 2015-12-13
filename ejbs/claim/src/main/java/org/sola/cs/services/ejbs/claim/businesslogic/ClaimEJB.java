@@ -70,6 +70,13 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     @EJB
     AdminCSEJBLocal adminEjb;
 
+    private static final int DPI = 96;
+    private static final String resourcesPath = "/styles/";
+    private final int mapMargin = 30;
+    private final int minGridCuts = 1;
+    private final int coordWidth = 67;
+    private final int roundNumber = 5;
+
     /**
      * Sets the entity package for the EJB to
      * Claim.class.getPackage().getName(). This is used to restrict the save and
@@ -191,20 +198,20 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (!newClaim) {
             // Get old claim
             Claim oldClaim = getRepository().getEntity(Claim.class, claim.getId());
-            if(oldClaim != null){
+            if (oldClaim != null) {
                 // Check challenge expiration date
-                if(oldClaim.getChallengeExpiryDate() != null && claim.getChallengeExpiryDate() != null &&
-                        !oldClaim.getChallengeExpiryDate().equals(claim.getChallengeExpiryDate())){
+                if (oldClaim.getChallengeExpiryDate() != null && claim.getChallengeExpiryDate() != null
+                        && !oldClaim.getChallengeExpiryDate().equals(claim.getChallengeExpiryDate())) {
                     // Allow change of expiration date only for unmoderated claims
-                    if(!oldClaim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)){
+                    if (!oldClaim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)) {
                         claim.setChallengeExpiryDate(oldClaim.getChallengeExpiryDate());
                     } else {
                         // Allow change of expiration date only for unmoderated claims and users with Reviewer/Moderator roles
-                        if(!isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM)){
+                        if (!isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM)) {
                             claim.setChallengeExpiryDate(oldClaim.getChallengeExpiryDate());
                         }
                         // Don't allow change of expiration date if it's already expired
-                        if(oldClaim.getChallengeExpiryDate().before(Calendar.getInstance().getTime())){
+                        if (oldClaim.getChallengeExpiryDate().before(Calendar.getInstance().getTime())) {
                             claim.setChallengeExpiryDate(oldClaim.getChallengeExpiryDate());
                         }
                     }
@@ -212,7 +219,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
             claim.setVersion(claim.getVersion() + 1);
         }
-        
+
         // Save claim
         claim = getRepository().saveEntity(claim);
 
@@ -264,9 +271,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
 
         String requireSpatial = systemEjb.getSetting(ConfigConstants.REQUIRES_SPATIAL, "1");
-        
-        if (fullValidation && requireSpatial.equals("1") && 
-                StringUtility.isEmpty(claim.getMappedGeometry())) {
+
+        if (fullValidation && requireSpatial.equals("1")
+                && StringUtility.isEmpty(claim.getMappedGeometry())) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_GEOMETRY_REQUIERD);
             } else {
@@ -1509,7 +1516,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             if (isInRole(RolesConstants.CS_REVIEW_CLAIM)) {
                 return true;
             }
-            
+
             // Moderation time is not expired yet and only claim with CREATED status can be changed
             if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.CREATED)) {
                 if (throwException) {
@@ -1544,23 +1551,23 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return true;
         }
 
-        if (statusCode.equalsIgnoreCase(ClaimStatusConstants.UNMODERATED) &&
-                claimStatusChanger.getLodgementDate() == null) {
+        if (statusCode.equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)
+                && claimStatusChanger.getLodgementDate() == null) {
             claimStatusChanger.setLodgementDate(Calendar.getInstance().getTime());
             claimStatusChanger.setChallengeExpiryDate(Calendar.getInstance().getTime());
-            
+
             // Assign same expiration date to challenging claim
             if (challengedClaim != null) {
                 claimStatusChanger.setChallengeExpiryDate(challengedClaim.getChallengeExpiryDate());
             } else {
                 String challengeExpiryDateString = systemEjb.getSetting(ConfigConstants.MODERATION_DATE, "");
                 Date challengeExpiryDate = null;
-                
-                if(!StringUtility.isEmpty(challengeExpiryDateString)){
+
+                if (!StringUtility.isEmpty(challengeExpiryDateString)) {
                     challengeExpiryDate = DateUtility.convertToDate(challengeExpiryDateString, "yyyy-MM-dd");
-                } 
-                
-                if(challengeExpiryDate != null && challengeExpiryDate.after(Calendar.getInstance().getTime())){
+                }
+
+                if (challengeExpiryDate != null && challengeExpiryDate.after(Calendar.getInstance().getTime())) {
                     claimStatusChanger.setChallengeExpiryDate(challengeExpiryDate);
                 } else {
                     int days = Integer.parseInt(systemEjb.getSetting(ConfigConstants.MODERATION_DAYS, "30"));
@@ -1669,10 +1676,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
         return false;
     }
-    
+
     @Override
     @RolesAllowed({RolesConstants.CS_MODERATE_CLAIM})
-    public boolean revertClaimReview(String claimId){
+    public boolean revertClaimReview(String claimId) {
         if (StringUtility.isEmpty(claimId)) {
             return false;
         }
@@ -1683,7 +1690,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
 
         // Revert claim review
-        if(changeClaimStatus(claimId, null, ClaimStatusConstants.UNMODERATED, null)){
+        if (changeClaimStatus(claimId, null, ClaimStatusConstants.UNMODERATED, null)) {
             List<Claim> challenges = getChallengingClaimsByChallengedId(claimId);
             if (challenges != null && challenges.size() > 0) {
                 for (Claim challenge : challenges) {
@@ -2000,11 +2007,11 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
-    public boolean canRevertClaimReview(String claimId){
+    public boolean canRevertClaimReview(String claimId) {
         return canRevertClaimReview(getRepository().getEntity(Claim.class, claimId), false);
     }
-    
-    private boolean canRevertClaimReview(Claim claim, boolean throwException){
+
+    private boolean canRevertClaimReview(Claim claim, boolean throwException) {
         if (claim == null) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
@@ -2038,7 +2045,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
         return true;
     }
-    
+
     @Override
     @RolesAllowed({RolesConstants.CS_RECORD_CLAIM})
     public void addClaimAttachment(String claimId, String attachmentId) {
