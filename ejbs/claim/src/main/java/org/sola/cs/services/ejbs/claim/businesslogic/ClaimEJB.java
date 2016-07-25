@@ -156,6 +156,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             fullValidation = false;
         }
 
+        // Clean up claim geometry from Myanmar characters
+        claim.setGpsGeometry(cleanupGeometry(claim.getGpsGeometry()));
+        claim.setMappedGeometry(cleanupGeometry(claim.getMappedGeometry()));
+
         validateClaim(claim, languageCode, fullValidation, true);
         String userName = getUserName();
         Claim challengedClaim = null;
@@ -246,6 +250,14 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         return getRepository().getEntity(Claim.class, claim.getId());
     }
 
+    private String cleanupGeometry(String geom) {
+        if(geom == null)
+            return null;
+        return geom.replace("၀", "0").replace("၁", "1").replace("၂","2").replace("၃","3")
+                .replace("၄","4").replace("၅","5").replace("၆","6").replace("၇","7")
+                .replace("၈","8").replace("၉","9");
+    }
+    
     private boolean validateClaim(Claim claim, String languageCode, boolean fullValidation, boolean throwException) {
         if (claim == null) {
             if (throwException) {
