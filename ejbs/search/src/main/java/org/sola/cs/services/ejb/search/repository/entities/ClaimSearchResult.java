@@ -33,7 +33,9 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
     private Long claimArea;
     @Column(name="rowversion")
     private int version;
-
+    @Column(name = "geom")
+    private String geom;
+    
     public static final String PARAM_NAME = "claimantName";
     public static final String PARAM_USERNAME = "userName";
     public static final String PARAM_CLAIM_NUMBER = "claimNumber";
@@ -46,6 +48,7 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
     public static final String PARAM_POINT = "pointParam";
     private static final String SELECT_PART = 
             "select c.id, c.nr, c.lodgement_date, c.claim_area, c.challenge_expiry_date, c.decision_date, c.description, \n"
+            + "ST_AsText(c.mapped_geometry) as geom, "
             + "c.claimant_id, (p.name || ' ' || coalesce(p.last_name, '')) as claimant_name,\n"
             + "c.challenged_claim_id, c.status_code, c.rowversion, get_translation(cs.display_value, #{" 
             + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name\n"
@@ -189,5 +192,13 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public String getGeom() {
+        return geom;
+    }
+
+    public void setGeom(String geom) {
+        this.geom = geom;
     }
 }
