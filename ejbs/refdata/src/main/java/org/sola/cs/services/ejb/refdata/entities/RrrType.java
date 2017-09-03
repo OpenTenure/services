@@ -34,15 +34,12 @@ import javax.persistence.Table;
 import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.entities.AbstractCodeEntity;
 
-/**
- * Entity representing the administrative.rrr_type code table.
- *
- * @author soladev
- */
 @Table(name = "rrr_type", schema = "administrative")
 @DefaultSorter(sortString = "display_value")
 public class RrrType extends AbstractCodeEntity {
 
+    public static final String TYPE_MORTGAGE = "mortgage";
+    
     @Column(name = "rrr_group_type_code")
     private String rrrGroupTypeCode;
     @Column(name = "is_primary")

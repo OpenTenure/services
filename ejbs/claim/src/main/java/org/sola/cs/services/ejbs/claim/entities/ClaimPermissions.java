@@ -16,8 +16,27 @@ public class ClaimPermissions {
     boolean canSubmitClaim = false;
     boolean canChallengeClaim = false;
     boolean canRevert = false;
-    
+    boolean canPrintCertificate = true;
+    boolean canIssue = false;
+    boolean canTransfer = false;
+     
     public ClaimPermissions(){
+    }
+
+    public boolean isCanIssue() {
+        return canIssue;
+    }
+          
+    public void setCanIssue(boolean canIssue) {
+        this.canIssue = canIssue;
+    }
+
+    public boolean isCanPrintCertificate() {
+        return canPrintCertificate;
+    }
+    
+    public void setCanPrintCertificate(boolean canPrintCertificate) {
+        this.canPrintCertificate = canPrintCertificate;
     }
 
     public boolean isCanSubmitClaim() {
@@ -115,4 +134,13 @@ public class ClaimPermissions {
     public void setCanRevert(boolean canRevert) {
         this.canRevert = canRevert;
     }
+        
+    public boolean isCanTransfer() {
+        return canTransfer;
+    }
+    
+    public void setCanTransfer(boolean canTransfer) {
+        this.canTransfer = canTransfer;
+    }
+
 }

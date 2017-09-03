@@ -1,19 +1,18 @@
 package org.sola.cs.services.ejbs.claim.entities;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Id;
-import javax.persistence.OrderBy;
-import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import org.sola.services.common.repository.ChildEntityList;
 import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 
-@Table(schema = "opentenure", name = "claim_share")
+@Table(schema = "opentenure", name = "restriction")
 @DefaultSorter(sortString = "status, registration_date")
-public class ClaimShare extends AbstractVersionedEntity {
+public class Restriction extends AbstractVersionedEntity {
     public static final String STATUS_ACTIVE = "a";
     public static final String STATUS_HISTORIC = "h";
     
@@ -22,23 +21,27 @@ public class ClaimShare extends AbstractVersionedEntity {
     private String id;
     @Column(name = "claim_id")
     private String claimId;
-    @Column(name = "nominator")
-    private Short nominator;
-    @Column(name = "denominator")
-    private Short denominator;
-    @Column(name = "percentage")
-    private double percentage;
-    @ChildEntityList(parentIdField = "claimShareId", childIdField = "partyId",
-    manyToManyClass = ClaimPartyForShare.class)
-    private List<ClaimParty> owners;
+    @Column(name = "type_code")
+    private String typeCode;
+    @Column(name = "amount")
+    private BigDecimal amount;
+    @Column(name = "interest_rate")
+    private BigDecimal interestRate;
+    @ChildEntityList(parentIdField = "restrictionId", childIdField = "partyId",
+    manyToManyClass = RestrictionParty.class)
+    private List<ClaimParty> restrictingParties;
     @Column
     private String status;
     @Column(name = "registration_date")
     private Date registrationDate;
+    @Column(name = "start_date")
+    private Date startDate;
+    @Column(name = "end_date")
+    private Date endDate;
     @Column(name = "termination_date")
     private Date terminationDate;
     
-    public ClaimShare(){
+    public Restriction(){
         super();
     }
 
@@ -58,36 +61,36 @@ public class ClaimShare extends AbstractVersionedEntity {
         this.claimId = claimId;
     }
 
-    public Short getNominator() {
-        return nominator;
+    public String getTypeCode() {
+        return typeCode;
     }
 
-    public void setNominator(Short nominator) {
-        this.nominator = nominator;
+    public void setTypeCode(String typeCode) {
+        this.typeCode = typeCode;
     }
 
-    public Short getDenominator() {
-        return denominator;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setDenominator(Short denominator) {
-        this.denominator = denominator;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
-    public double getPercentage() {
-        return percentage;
+    public BigDecimal getInterestRate() {
+        return interestRate;
     }
 
-    public void setPercentage(double percentage) {
-        this.percentage = percentage;
+    public void setInterestRate(BigDecimal interestRate) {
+        this.interestRate = interestRate;
     }
 
-    public List<ClaimParty> getOwners() {
-        return owners;
+    public List<ClaimParty> getRestrictingParties() {
+        return restrictingParties;
     }
 
-    public void setOwners(List<ClaimParty> owners) {
-        this.owners = owners;
+    public void setRestrictingParties(List<ClaimParty> restrictingParties) {
+        this.restrictingParties = restrictingParties;
     }
 
     public String getStatus() {
@@ -104,6 +107,22 @@ public class ClaimShare extends AbstractVersionedEntity {
 
     public void setRegistrationDate(Date registrationDate) {
         this.registrationDate = registrationDate;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     public Date getTerminationDate() {

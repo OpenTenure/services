@@ -1,13 +1,13 @@
 package org.sola.cs.services.ejbs.claim.businesslogic;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.ejb.Local;
+import org.sola.cs.services.ejb.refdata.entities.SourceType;
+import org.sola.cs.services.ejbs.claim.entities.Attachment;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentBinary;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentChunk;
 import org.sola.cs.services.ejbs.claim.entities.Claim;
 import org.sola.cs.services.ejbs.claim.entities.ClaimPermissions;
-import org.sola.cs.services.ejbs.claim.entities.ClaimSpatial;
 import org.sola.cs.services.ejbs.claim.entities.ClaimStatus;
 import org.sola.cs.services.ejbs.claim.entities.FieldConstraintType;
 import org.sola.cs.services.ejbs.claim.entities.FieldType;
@@ -15,6 +15,7 @@ import org.sola.cs.services.ejbs.claim.entities.FieldValueType;
 import org.sola.cs.services.ejbs.claim.entities.FormTemplate;
 import org.sola.cs.services.ejbs.claim.entities.LandUse;
 import org.sola.cs.services.ejbs.claim.entities.RejectionReason;
+import org.sola.cs.services.ejbs.claim.entities.Restriction;
 import org.sola.services.common.ejbs.AbstractEJBLocal;
 
 @Local
@@ -58,7 +59,11 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     boolean canChallengeClaim(String claimId);
     boolean canRevertClaimReview(String claimId);
     boolean submitClaim(String claimId, String languageCode);
+    boolean canPrintClaimCertificate(String claimId, String languageCode);
+    boolean canIssueClaim(String id);
+    boolean canTransferClaim(String claimId);
     void addClaimAttachment(String claimId, String attachmentId);
+    Attachment saveClaimAttachment(Attachment attachment, String languageCode);
     ClaimPermissions getClaimPermissions(String claimId);
     List<FormTemplate> getFormTemplates(String languageCode);
     FormTemplate getFormTemplate(String templateName, String languageCode);
@@ -67,4 +72,11 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     List<FieldValueType> getFieldValueTypes(String languageCode);
     List<FieldConstraintType> getFieldConstraintTypes(String languageCode);
     boolean checkFormTemplateHasPayload(String formName);
+    boolean issueClaim(String claimId, String languageCode);
+    List<SourceType> getDocumentTypesForIssuance(String languageCode);
+    Claim transferClaim(Claim claim, String languageCode);
+    Claim registerMortgage(Claim claim, String languageCode);
+    Restriction terminateRestriction(String restrictionId);
+    void mergeClaims(List<Claim> oldClaims, Claim newClaim);
+    void splitClaim(Claim oldClaim, List<Claim> newClaims);
 }

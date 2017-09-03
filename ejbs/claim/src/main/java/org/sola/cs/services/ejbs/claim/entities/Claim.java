@@ -18,7 +18,7 @@ import org.sola.cs.services.ejb.system.businesslogic.SystemCSEJBLocal;
 
 @Table(schema = "opentenure", name = "claim")
 public class Claim extends AbstractVersionedEntity {
-    
+
     @Id
     @Column(name = "id")
     private String id;
@@ -26,19 +26,19 @@ public class Claim extends AbstractVersionedEntity {
     private String nr;
     @Column(name = "start_date")
     private Date startDate;
-    @Column(name="land_use_code")
+    @Column(name = "land_use_code")
     private String landUseCode;
     @Column
     private String notes;
-    @Column(name="north_adjacency")
+    @Column(name = "north_adjacency")
     private String northAdjacency;
-    @Column(name="south_adjacency")
+    @Column(name = "south_adjacency")
     private String southAdjacency;
-    @Column(name="east_adjacency")
+    @Column(name = "east_adjacency")
     private String eastAdjacency;
-    @Column(name="west_adjacency")
+    @Column(name = "west_adjacency")
     private String westAdjacency;
-    @Column(name="assignee_name", insertable = false, updatable = false)
+    @Column(name = "assignee_name", insertable = false, updatable = false)
     private String assigneeName;
     @Column(name = "lodgement_date", insertable = false, updatable = false)
     private Date lodgementDate;
@@ -57,21 +57,23 @@ public class Claim extends AbstractVersionedEntity {
     @ChildEntityList(parentIdField = "claimId", cascadeDelete = true)
     private List<ClaimShare> shares;
     @ChildEntityList(parentIdField = "claimId", cascadeDelete = true)
+    private List<Restriction> restrictions;
+    @ChildEntityList(parentIdField = "claimId", cascadeDelete = true)
     private List<ClaimLocation> locations;
     @ChildEntityList(parentIdField = "claimId", cascadeDelete = true)
     private List<ClaimComment> comments;
-    @ChildEntityList(parentIdField = "claimId", childIdField = "attachmentId", 
+    @ChildEntityList(parentIdField = "claimId", childIdField = "attachmentId",
             cascadeDelete = false, manyToManyClass = ClaimUsesAttachment.class)
     private List<Attachment> attachments;
     @ChildEntity(insertBeforeParent = false, parentIdField = "claimId")
     private FormPayload dynamicForm;
     @Column(name = "mapped_geometry")
     @AccessFunctions(onSelect = "ST_AsText(mapped_geometry)",
-    onChange = "ST_GeomFromText(#{mappedGeometry})")
+            onChange = "ST_GeomFromText(#{mappedGeometry})")
     private String mappedGeometry;
     @Column(name = "gps_geometry")
     @AccessFunctions(onSelect = "ST_AsText(gps_geometry)",
-    onChange = "ST_GeomFromText(#{gpsGeometry})")
+            onChange = "ST_GeomFromText(#{gpsGeometry})")
     private String gpsGeometry;
     @Column(name = "status_code", insertable = false, updatable = false)
     private String statusCode;
@@ -81,16 +83,31 @@ public class Claim extends AbstractVersionedEntity {
     private String typeCode;
     @Column(name = "rejection_reason_code")
     private String rejectionReasonCode;
-    @Column(name="rowversion", updatable = false, insertable = false)
+    @Column(name = "rowversion", updatable = false, insertable = false)
     private int version;
-    @Column(name="claim_area")
+    @Column(name = "claim_area")
     private Long claimArea;
-    
+    @Column(name = "issuance_date")
+    private Date issuanceDate;
+    @Column(name = "termination_date")
+    private Date terminationDate;
+    @Column(name = "termination_reason_code")
+    private String terminationReasonCode;
+    @Column(name = "create_transaction")
+    private String createTransaction;
+    @Column(name = "terminate_transaction")
+    private String terminateTransaction;
+    private List<Claim> parentClaims;
+    private List<Claim> childClaims;
+
     public static final String PARAM_CHALLENGED_ID = "challengeId";
     public static final String PARAM_CLAIM_NUMBER = "claimNumber";
+    public static final String PARAM_TRANSACTION = "transact";
     public static final String WHERE_BY_CHALLENGED_ID = "challenged_claim_id = #{ " + PARAM_CHALLENGED_ID + "}";
     public static final String WHERE_BY_CLAIM_NUMBER = "nr = #{ " + PARAM_CLAIM_NUMBER + "}";
-    
+    public static final String WHERE_BY_TERMINTATE_TRANSACTION = "terminate_transaction = #{" + PARAM_TRANSACTION + "}";
+    public static final String WHERE_BY_CREATE_TRANSACTION = "create_transaction = #{" + PARAM_TRANSACTION + "}";
+
     public Claim() {
         super();
     }
@@ -176,6 +193,14 @@ public class Claim extends AbstractVersionedEntity {
 
     public void setShares(List<ClaimShare> shares) {
         this.shares = shares;
+    }
+
+    public List<Restriction> getRestrictions() {
+        return restrictions;
+    }
+
+    public void setRestrictions(List<Restriction> restrictions) {
+        this.restrictions = restrictions;
     }
 
     public List<Attachment> getAttachments() {
@@ -302,9 +327,9 @@ public class Claim extends AbstractVersionedEntity {
     public List<ClaimLocation> getLocations() {
         return locations;
     }
-    
+
     public ClaimLocation[] getLocationsArray() {
-        if(getLocations()== null){
+        if (getLocations() == null) {
             return null;
         }
         return getLocations().toArray(new ClaimLocation[getLocations().size()]);
@@ -345,13 +370,69 @@ public class Claim extends AbstractVersionedEntity {
     public void setClaimArea(Long claimArea) {
         this.claimArea = claimArea;
     }
-    
-    public boolean getIsReadyForReview(){
-        return getChallengeExpiryDate() != null && getStatusCode() != null 
+
+    public Date getIssuanceDate() {
+        return issuanceDate;
+    }
+
+    public void setIssuanceDate(Date issuanceDate) {
+        this.issuanceDate = issuanceDate;
+    }
+
+    public Date getTerminationDate() {
+        return terminationDate;
+    }
+
+    public void setTerminationDate(Date terminationDate) {
+        this.terminationDate = terminationDate;
+    }
+
+    public String getTerminationReasonCode() {
+        return terminationReasonCode;
+    }
+
+    public void setTerminationReasonCode(String terminationReasonCode) {
+        this.terminationReasonCode = terminationReasonCode;
+    }
+
+    public String getCreateTransaction() {
+        return createTransaction;
+    }
+
+    public void setCreateTransaction(String createTransaction) {
+        this.createTransaction = createTransaction;
+    }
+
+    public String getTerminateTransaction() {
+        return terminateTransaction;
+    }
+
+    public void setTerminateTransaction(String terminateTransaction) {
+        this.terminateTransaction = terminateTransaction;
+    }
+
+    public List<Claim> getParentClaims() {
+        return parentClaims;
+    }
+
+    public void setParentClaims(List<Claim> parentClaims) {
+        this.parentClaims = parentClaims;
+    }
+
+    public List<Claim> getChildClaims() {
+        return childClaims;
+    }
+
+    public void setChildClaims(List<Claim> childClaims) {
+        this.childClaims = childClaims;
+    }
+
+    public boolean getIsReadyForReview() {
+        return getChallengeExpiryDate() != null && getStatusCode() != null
                 && getStatusCode().equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)
                 && getChallengeExpiryDate().before(Calendar.getInstance().getTime());
     }
-    
+
     private String generateNumber() {
         String result = "";
         SystemCSEJBLocal systemEJB = RepositoryUtility.tryGetEJB(SystemCSEJBLocal.class);
@@ -363,7 +444,7 @@ public class Claim extends AbstractVersionedEntity {
         }
         return result;
     }
-    
+
     @Override
     public void preSave() {
         if (isNew()) {

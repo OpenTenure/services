@@ -23,6 +23,8 @@ import org.sola.common.SOLANoDataException;
 import org.sola.common.StringUtility;
 import org.sola.cs.common.messaging.MessageUtility;
 import org.sola.cs.common.messaging.ServiceMessage;
+import org.sola.cs.services.ejb.refdata.businesslogic.RefDataCSEJBLocal;
+import org.sola.cs.services.ejb.refdata.entities.SourceType;
 import org.sola.cs.services.ejbs.claim.entities.Attachment;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentBinary;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentChunk;
@@ -56,6 +58,8 @@ import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.cs.services.ejb.system.businesslogic.SystemCSEJBLocal;
 import org.sola.cs.services.ejbs.admin.businesslogic.AdminCSEJBLocal;
 import org.sola.cs.services.ejbs.admin.businesslogic.repository.entities.User;
+import org.sola.cs.services.ejbs.claim.entities.Restriction;
+import org.sola.cs.services.ejbs.claim.entities.TerminationReason;
 
 /**
  * Implements methods to manage the claim and it's related objects
@@ -69,6 +73,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
     @EJB
     AdminCSEJBLocal adminEjb;
+
+    @EJB
+    RefDataCSEJBLocal refDataEjb;
 
     private static final int DPI = 96;
     private static final String resourcesPath = "/styles/";
@@ -124,6 +131,21 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         Claim result = null;
         if (id != null) {
             result = getRepository().getEntity(Claim.class, id);
+            // Populate parent and child lists
+            if (result != null && !StringUtility.isEmpty(result.getCreateTransaction())) {
+                // Get parents
+                HashMap params = new HashMap();
+                params.put(CommonSqlProvider.PARAM_WHERE_PART, Claim.WHERE_BY_TERMINTATE_TRANSACTION);
+                params.put(Claim.PARAM_TRANSACTION, result.getCreateTransaction());
+                result.setParentClaims(getRepository().getEntityList(Claim.class, params));
+            }
+            if (result != null && !StringUtility.isEmpty(result.getTerminateTransaction())) {
+                // Get children
+                HashMap params = new HashMap();
+                params.put(CommonSqlProvider.PARAM_WHERE_PART, Claim.WHERE_BY_CREATE_TRANSACTION);
+                params.put(Claim.PARAM_TRANSACTION, result.getTerminateTransaction());
+                result.setChildClaims(getRepository().getEntityList(Claim.class, params));
+            }
         }
         return result;
     }
@@ -141,6 +163,174 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         params.put(CommonSqlProvider.PARAM_WHERE_PART, Claim.WHERE_BY_CHALLENGED_ID);
         params.put(Claim.PARAM_CHALLENGED_ID, challengedId);
         return getRepository().getEntityList(Claim.class, params);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_RECORD_CLAIM, RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM})
+    public Claim transferClaim(Claim claim, String languageCode) {
+        if (claim == null) {
+            throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
+        }
+        claim.setVersion(claim.getVersion() + 1);
+        Date currentTime = Calendar.getInstance().getTime();
+        String userName = getUserName();
+
+        // Set share registration and termination date
+        if (claim.getShares() != null) {
+            for (ClaimShare share : claim.getShares()) {
+                // Assign user name if empty
+                if (share.getOwners() != null) {
+                    for (ClaimParty party : share.getOwners()) {
+                        if (StringUtility.isEmpty(party.getUserName())) {
+                            party.setUserName(userName);
+                        }
+                    }
+                }
+
+                if (StringUtility.empty(share.getStatus()).equalsIgnoreCase(ClaimShare.STATUS_HISTORIC) && share.getTerminationDate() == null) {
+                    share.setTerminationDate(currentTime);
+                }
+                if ((StringUtility.isEmpty(share.getStatus())
+                        || StringUtility.empty(share.getStatus()).equalsIgnoreCase(ClaimShare.STATUS_ACTIVE))
+                        && share.getRegistrationDate() == null) {
+                    share.setRegistrationDate(currentTime);
+                }
+            }
+        }
+        return getRepository().saveEntity(claim);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_RECORD_CLAIM, RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM})
+    public Claim registerMortgage(Claim claim, String languageCode) {
+        if (claim == null) {
+            throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
+        }
+
+        String userName = getUserName();
+
+        if (claim.getRestrictions() != null) {
+            for (Restriction restriction : claim.getRestrictions()) {
+                if (restriction.getRestrictingParties() != null) {
+                    for (ClaimParty party : restriction.getRestrictingParties()) {
+                        if (StringUtility.isEmpty(party.getUserName())) {
+                            party.setUserName(userName);
+                        }
+                    }
+                }
+            }
+        }
+
+        claim.setVersion(claim.getVersion() + 1);
+        return getRepository().saveEntity(claim);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_RECORD_CLAIM, RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM})
+    public Restriction terminateRestriction(String restrictionId) {
+        if (StringUtility.isEmpty(restrictionId)) {
+            return null;
+        }
+        Restriction restriction = getRepository().getEntity(Restriction.class, restrictionId);
+        if (restriction == null || !StringUtility.empty(restriction.getStatus()).equalsIgnoreCase(Restriction.STATUS_ACTIVE)) {
+            return null;
+        }
+        restriction.setStatus(Restriction.STATUS_HISTORIC);
+        restriction.setTerminationDate(Calendar.getInstance().getTime());
+        getRepository().saveEntity(restriction);
+        return getRepository().getEntity(Restriction.class, restrictionId);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_MODERATE_CLAIM})
+    public void mergeClaims(List<Claim> oldClaims, Claim newClaim) {
+        if (oldClaims == null || oldClaims.size() < 1 || newClaim == null) {
+            throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
+        }
+
+        // Make checks
+        checkClaimToAdd(newClaim);
+        if (oldClaims.size() < 2) {
+            throw new SOLAException(ServiceMessage.OT_WS_CLAIM_MERGE_WRONG_COUNT);
+        }
+
+        Date today = Calendar.getInstance().getTime();
+        String transactionId = UUID.randomUUID().toString();
+
+        // Update new claim to set creations transaction
+        ClaimStatusChanger claimChanger = getRepository().getEntity(ClaimStatusChanger.class, newClaim.getId());
+        if (claimChanger != null) {
+            claimChanger.setCreateTransaction(transactionId);
+            getRepository().saveEntity(claimChanger);
+        }
+
+        // Make historic old claims
+        for (Claim claim : oldClaims) {
+            checkClaimToAdd(claim);
+            claimChanger = getRepository().getEntity(ClaimStatusChanger.class, claim.getId());
+            if (claimChanger != null) {
+                claimChanger.setTerminationDate(today);
+                claimChanger.setTerminateTransaction(transactionId);
+                claimChanger.setTerminationReasonCode(TerminationReason.CODE_MERGE);
+                claimChanger.setAssigneeName(null);
+                claimChanger.setStatusCode(ClaimStatusConstants.HISTORIC);
+                getRepository().saveEntity(claimChanger);
+            }
+        }
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_MODERATE_CLAIM})
+    public void splitClaim(Claim oldClaim, List<Claim> newClaims) {
+        if (newClaims == null || newClaims.size() < 1 || oldClaim == null) {
+            throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
+        }
+
+        // Make checks
+        checkClaimToAdd(oldClaim);
+        if (newClaims.size() < 2) {
+            throw new SOLAException(ServiceMessage.OT_WS_CLAIM_SPLIT_WRONG_COUNT);
+        }
+
+        Date today = Calendar.getInstance().getTime();
+        String transactionId = UUID.randomUUID().toString();
+
+        // Make historic old claim
+        ClaimStatusChanger claimChanger = getRepository().getEntity(ClaimStatusChanger.class, oldClaim.getId());
+        if (claimChanger != null) {
+            claimChanger.setTerminationDate(today);
+            claimChanger.setTerminateTransaction(transactionId);
+            claimChanger.setTerminationReasonCode(TerminationReason.CODE_SPLIT);
+            claimChanger.setAssigneeName(null);
+            claimChanger.setStatusCode(ClaimStatusConstants.HISTORIC);
+            getRepository().saveEntity(claimChanger);
+        }
+
+        // Update new claims to set creations transaction
+        for (Claim claim : newClaims) {
+            checkClaimToAdd(claim);
+            claimChanger = getRepository().getEntity(ClaimStatusChanger.class, claim.getId());
+            if (claimChanger != null) {
+                claimChanger.setCreateTransaction(transactionId);
+                getRepository().saveEntity(claimChanger);
+            }
+        }
+    }
+
+    private boolean checkClaimToAdd(Claim claim) {
+        // Check status 
+        if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)) {
+            throw new SOLAException(ServiceMessage.OT_WS_CLAIM_MUST_BE_MODERATED, new Object[]{claim.getNr()});
+        }
+        // Check restrictions
+        if (claim.getRestrictions() != null) {
+            for (Restriction restriction : claim.getRestrictions()) {
+                if (restriction.getStatus().equalsIgnoreCase("a")) {
+                    throw new SOLAException(ServiceMessage.OT_WS_CLAIM_HAS_RESTRICTIONS, new Object[]{claim.getNr()});
+                }
+            }
+        }
+        return true;
     }
 
     @Override
@@ -221,7 +411,6 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                     }
                 }
             }
-            claim.setVersion(claim.getVersion() + 1);
         }
 
         // Save claim
@@ -251,13 +440,14 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     private String cleanupGeometry(String geom) {
-        if(geom == null)
+        if (geom == null) {
             return null;
-        return geom.replace("၀", "0").replace("၁", "1").replace("၂","2").replace("၃","3")
-                .replace("၄","4").replace("၅","5").replace("၆","6").replace("၇","7")
-                .replace("၈","8").replace("၉","9");
+        }
+        return geom.replace("၀", "0").replace("၁", "1").replace("၂", "2").replace("၃", "3")
+                .replace("၄", "4").replace("၅", "5").replace("၆", "6").replace("၇", "7")
+                .replace("၈", "8").replace("၉", "9");
     }
-    
+
     private boolean validateClaim(Claim claim, String languageCode, boolean fullValidation, boolean throwException) {
         if (claim == null) {
             if (throwException) {
@@ -454,8 +644,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 Attachment attch = getRepository().getEntity(Attachment.class, claimAttch.getId());
                 if (attch == null) {
                     missingAttachments.add(claimAttch.getId());
-                } else {
-                    // Check user name on attachment
+                } else // Check user name on attachment
+                {
                     if (!canEditOtherClaims && !attch.getUserName().equalsIgnoreCase(userName)
                             && !attch.getUserName().equalsIgnoreCase(challengedClaimUser)) {
                         if (throwException) {
@@ -797,6 +987,77 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
+    public List<SourceType> getDocumentTypesForIssuance(String langaugeCode) {
+        String docTypesString = systemEjb.getSetting(ConfigConstants.DOCUMENTS_FOR_ISSUING_CERT, "");
+        List<SourceType> docTypes = new ArrayList<SourceType>();
+
+        if (!StringUtility.isEmpty(docTypesString)) {
+            String[] docTypeCodes = docTypesString.replace(" ", "").split(",");
+            if (docTypeCodes != null && docTypeCodes.length > 0) {
+
+                List<SourceType> allDocTypes = refDataEjb.getCodeEntityList(SourceType.class, langaugeCode);
+
+                if (allDocTypes != null && allDocTypes.size() > 0) {
+                    for (SourceType docType : allDocTypes) {
+                        for (String docTypeCode : docTypeCodes) {
+                            if (docType.getCode().equalsIgnoreCase(docTypeCode)) {
+                                docTypes.add(docType);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return docTypes;
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE})
+    public boolean issueClaim(String claimId, final String langaugeCode) {
+        if (StringUtility.isEmpty(claimId)) {
+            return false;
+        }
+
+        Claim claim = getRepository().getEntity(Claim.class, claimId);
+        canIssueClaim(claim, true);
+
+        // Check documents 
+        List<SourceType> docTypes = getDocumentTypesForIssuance(langaugeCode);
+
+        if (docTypes.size() > 0) {
+            String missingDocs = "";
+
+            for (SourceType docType : docTypes) {
+                boolean found = false;
+
+                if (claim.getAttachments() != null && claim.getAttachments().size() > 0) {
+                    for (Attachment attach : claim.getAttachments()) {
+                        if (!StringUtility.isEmpty(attach.getTypeCode()) && attach.getTypeCode().equalsIgnoreCase(docType.getCode())) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found) {
+                    // Get missing document type for error
+                    if (missingDocs.length() > 0) {
+                        missingDocs += ", ";
+                    }
+                    missingDocs += docType.getDisplayValue();
+                }
+            }
+
+            if (missingDocs.length() > 0) {
+                // Throw error
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CANT_ISSUE_FOUND_MISSING_DOCS, new Object[]{missingDocs});
+            }
+        }
+
+        return changeClaimStatus(claimId, null, ClaimStatusConstants.ISSUED, null);
+    }
+
+    @Override
     @RolesAllowed({RolesConstants.CS_RECORD_CLAIM})
     public boolean submitClaim(String claimId, String languageCode) {
         if (StringUtility.isEmpty(claimId)) {
@@ -921,7 +1182,11 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
-    @RolesAllowed({RolesConstants.CS_RECORD_CLAIM, RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM})
+    @RolesAllowed({
+        RolesConstants.CS_RECORD_CLAIM,
+        RolesConstants.CS_REVIEW_CLAIM,
+        RolesConstants.CS_MODERATE_CLAIM,
+        RolesConstants.CS_PRINT_CERTIFICATE})
     public AttachmentBinary saveAttachment(AttachmentBinary attachment) {
         if (attachment == null) {
             throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
@@ -1474,6 +1739,31 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
+    public boolean canPrintClaimCertificate(String claimId, String languageCode) {
+        return canPrintClaimCertificate(getRepository().getEntity(Claim.class, claimId), false);
+
+    }
+
+    private boolean canPrintClaimCertificate(Claim claim, boolean throwException) {
+        if (claim == null) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
+            }
+            return false;
+        }
+
+        if (claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)
+                && isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)) {
+            return true;
+        } else {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CERT_PRINT_NOT_ALLOWED);
+            }
+            return false;
+        }
+    }
+
+    @Override
     public boolean canEditClaim(String claimId) {
         return canEditClaim(getRepository().getEntity(Claim.class, claimId), false);
     }
@@ -1488,8 +1778,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
         // Restrict editing of claims if they are in the final status
         if (claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)
+                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.ISSUED)
                 || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.REJECTED)
-                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.WITHDRAWN)) {
+                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.WITHDRAWN)
+                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.HISTORIC)) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_IS_READ_ONLY);
             }
@@ -1596,6 +1888,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
         if (statusCode.equalsIgnoreCase(ClaimStatusConstants.REJECTED) && !StringUtility.isEmpty(rejectionCode)) {
             claimStatusChanger.setRejectionReasonCode(rejectionCode);
+        }
+
+        if (statusCode.equalsIgnoreCase(ClaimStatusConstants.ISSUED)) {
+            claimStatusChanger.setIssuanceDate(Calendar.getInstance().getTime());
         }
 
         claimStatusChanger.setStatusCode(statusCode);
@@ -1727,7 +2023,13 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
-        // Approve claim moderation
+        // Set registration date and approve claim moderation
+        if (claim.getShares() != null) {
+            for (ClaimShare share : claim.getShares()) {
+                share.setRegistrationDate(Calendar.getInstance().getTime());
+            }
+        }
+
         if (changeClaimStatus(id, null, ClaimStatusConstants.MODERATED, null)) {
             List<Claim> challenges = getChallengingClaimsByChallengedId(id);
 
@@ -1831,6 +2133,38 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
+    public boolean canIssueClaim(String id) {
+        return canIssueClaim(getRepository().getEntity(Claim.class, id), false);
+    }
+
+    private boolean canIssueClaim(Claim claim, boolean throwException) {
+        if (claim == null) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
+            }
+            return false;
+        }
+
+        // Check user role
+        if (!isInRole(RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.EXCEPTION_INSUFFICIENT_RIGHTS);
+            }
+            return false;
+        }
+
+        // Check claim to be moderated
+        if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CANT_ISSUE);
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     public boolean canApproveClaimModeration(String id) {
         return canApproveClaimModeration(getRepository().getEntity(Claim.class, id), false);
     }
@@ -1881,6 +2215,37 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                     return false;
                 }
             }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean canTransferClaim(String claimId) {
+        return canTransferClaim(getRepository().getEntity(Claim.class, claimId), false);
+    }
+
+    private boolean canTransferClaim(Claim claim, boolean throwException) {
+        if (claim == null) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
+            }
+            return false;
+        }
+
+        // Check user role
+        if (!isInRole(RolesConstants.CS_MODERATE_CLAIM)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.EXCEPTION_INSUFFICIENT_RIGHTS);
+            }
+            return false;
+        }
+
+        // Check claim status
+        if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CANT_TRANSFER);
+            }
+            return false;
         }
         return true;
     }
@@ -1951,6 +2316,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.CREATED)
                 || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.WITHDRAWN)
                 || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)
+                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.HISTORIC)
+                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.ISSUED)
                 || !StringUtility.isEmpty(claim.getAssigneeName())) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CANT_ASSIGN);
@@ -1973,7 +2340,19 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        // Forbid adding documents for historic claims
+        if (claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.HISTORIC)) {
+            if (throwException) {
+                throw new SOLAException(ServiceMessage.OT_WS_CLAIM_IS_READ_ONLY);
+            }
+            return false;
+        }
+
         // Check claim status and ownership
+        if (canIssueClaim(claim, throwException)) {
+            return true;
+        }
+
         if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)
                 || !StringUtility.empty(claim.getRecorderName()).equalsIgnoreCase(getUserName())) {
             if (throwException) {
@@ -2008,7 +2387,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         // Check claim can be assigned
         if (!isClaimExpired(claim) || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.REJECTED)
                 || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.WITHDRAWN)
+                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.HISTORIC)
                 || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)
+                || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.ISSUED)
                 || StringUtility.isEmpty(claim.getAssigneeName())) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CANT_UNASSIGN);
@@ -2067,9 +2448,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         Attachment attch = getRepository().getEntity(Attachment.class, attachmentId);
         if (attch == null) {
             throw new SOLAException(ServiceMessage.OT_WS_MISSING_SERVER_ATTACHMENTS);
-        } else {
-            // Check user name on attachment
-            if (!isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM)
+        } else // Check user name on attachment
+        {
+            if (!isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)
                     && !attch.getUserName().equalsIgnoreCase(getUserName())) {
                 throw new SOLAException(ServiceMessage.EXCEPTION_OBJECT_ACCESS_RIGHTS);
             }
@@ -2085,6 +2466,13 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         claimAttach.setClaimId(claimId);
         claimAttach.setAttachmentId(attachmentId);
         getRepository().saveEntity(claimAttach);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE})
+    public Attachment saveClaimAttachment(Attachment attachment, String languageCode) {
+        // TODO: Make additional checks to allow saving only for moderated claims
+        return getRepository().saveEntity(attachment);
     }
 
     @Override
@@ -2114,6 +2502,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         permissions.setCanSubmitClaim(canSubmitClaim(claim, false));
         permissions.setCanChallengeClaim(canChallengeClaim(claim, false));
         permissions.setCanRevert(canRevertClaimReview(claim, false));
+        permissions.setCanPrintCertificate(canPrintClaimCertificate(claim, false));
+        permissions.setCanIssue(canIssueClaim(claim, false));
+        permissions.setCanTransfer(canTransferClaim(claim, false));
         return permissions;
     }
 
