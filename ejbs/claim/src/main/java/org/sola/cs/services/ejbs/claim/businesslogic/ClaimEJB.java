@@ -889,7 +889,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
         String communityArea = systemEjb.getSetting(ConfigConstants.OT_COMMUNITY_AREA, "");
 
-        String sql = "select (ST_Contains(ST_Envelope(st_geomfromtext('%s')), st_geomfromtext('%s'))) as result";
+        String sql = "select (ST_Contains(st_geomfromtext('%s'), st_geomfromtext('%s'))) as result";
         sql = String.format(sql, communityArea, geom);
 
         Map params = new HashMap<String, Object>();
