@@ -62,6 +62,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.Local;
+import org.sola.cs.services.ejb.search.repository.entities.MapSearchResult;
 import org.sola.services.common.ejbs.AbstractEJBLocal;
 import org.sola.cs.services.ejb.search.spatial.QueryForNavigation;
 import org.sola.cs.services.ejb.search.spatial.QueryForPublicDisplayMap;
@@ -260,6 +261,11 @@ public interface SearchCSEJBLocal extends AbstractEJBLocal {
      * See {@linkplain SearchEJB#searchClaims(org.sola.services.ejb.search.repository.entities.ClaimSearchParams)}.
      */
     List<ClaimSearchResult> searchClaims(ClaimSearchParams searchParams);
+    
+    /**
+     * See {@linkplain SearchEJB#searchMap(java.lang.String)}.
+     */
+    List<MapSearchResult> searchMap(String searchString);
     
     /**
      * See {@linkplain SearchEJB#searchAssignedClaims()}.

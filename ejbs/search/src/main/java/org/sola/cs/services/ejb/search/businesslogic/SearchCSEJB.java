@@ -66,6 +66,8 @@ import java.util.*;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.sola.common.DateUtility;
 import org.sola.common.RolesConstants;
 import org.sola.common.SOLAException;
@@ -75,7 +77,7 @@ import org.sola.services.common.ejbs.AbstractEJB;
 import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 import org.sola.cs.services.ejb.search.repository.SearchSqlProvider;
-import static org.sola.cs.services.ejb.search.repository.entities.ClaimSearchResult.PARAM_USERNAME;
+import org.sola.cs.services.ejb.search.repository.entities.MapSearchResult;
 import org.sola.cs.services.ejb.search.spatial.QueryForNavigation;
 import org.sola.cs.services.ejb.search.spatial.QueryForPublicDisplayMap;
 import org.sola.cs.services.ejb.search.spatial.QueryForSelect;
@@ -1040,6 +1042,36 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         return getRepository().getEntityList(ClaimSearchResult.class, params);
     }
 
+    @Override
+    public List<MapSearchResult> searchMap(String searchString){
+        Map params = new HashMap<String, Object>();
+        String name = "";
+        String point = "";
+        String claimNumber = "";
+        
+        // prepare params
+        if(!StringUtility.isEmpty(searchString)){
+            searchString = searchString.trim().replace("#", "");
+            // Try to guess parameters
+            String numbers[] = searchString.replace(" ", "").split(",");
+            if(numbers != null && numbers.length > 1){
+                if(NumberUtils.isNumber(numbers[0]) && NumberUtils.isNumber(numbers[1])){
+                    point = String.format("POINT(%s %s)", numbers[0], numbers[1]);
+                }
+            } else {
+               name = searchString;
+               claimNumber = searchString;
+            }
+        }
+        
+        params.put(CommonSqlProvider.PARAM_QUERY, MapSearchResult.QUERY_SEARCH);
+        params.put(MapSearchResult.PARAM_NAME, name);
+        params.put(MapSearchResult.PARAM_CLAIM_NUMBER, claimNumber);
+        params.put(MapSearchResult.PARAM_POINT, point);
+        
+        return getRepository().getEntityList(MapSearchResult.class, params);
+    }
+    
     @Override
     public List<SpatialResult> getPlanCadastreObjects(String cadastreObjectId) {
         Map params = new HashMap<String, Object>();
