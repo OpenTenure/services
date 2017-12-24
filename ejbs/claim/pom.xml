@@ -4,7 +4,7 @@
     <parent>
         <artifactId>sola-cs-ejbs</artifactId>
         <groupId>org.sola.cs.services</groupId>
-        <version>1708a</version>
+        <version>1712a</version>
     </parent>
     <properties>
         <geotools.version>14.1</geotools.version>
@@ -12,7 +12,7 @@
     
     <groupId>org.sola.cs.services.ejbs</groupId>
     <artifactId>sola-cs-claim</artifactId>
-    <version>1708a</version>
+    <version>1712a</version>
     <packaging>ejb</packaging>
 
     <name>EJB CS Claim</name> 
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.sola.cs.services.ejbs</groupId>
             <artifactId>sola-cs-refdata</artifactId>
-            <version>1708a</version>
+            <version>1712a</version>
             <type>jar</type>
         </dependency>
     </dependencies>
