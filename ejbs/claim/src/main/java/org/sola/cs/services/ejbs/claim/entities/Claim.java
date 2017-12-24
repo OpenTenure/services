@@ -99,7 +99,9 @@ public class Claim extends AbstractVersionedEntity {
     private String terminateTransaction;
     private List<Claim> parentClaims;
     private List<Claim> childClaims;
-
+    @Column(name = "boundary_id")
+    private String boundaryId;
+    
     public static final String PARAM_CHALLENGED_ID = "challengeId";
     public static final String PARAM_CLAIM_NUMBER = "claimNumber";
     public static final String PARAM_TRANSACTION = "transact";
@@ -425,6 +427,14 @@ public class Claim extends AbstractVersionedEntity {
 
     public void setChildClaims(List<Claim> childClaims) {
         this.childClaims = childClaims;
+    }
+
+    public String getBoundaryId() {
+        return boundaryId;
+    }
+
+    public void setBoundaryId(String boundaryId) {
+        this.boundaryId = boundaryId;
     }
 
     public boolean getIsReadyForReview() {

@@ -62,7 +62,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.Local;
+import org.sola.cs.services.ejb.search.repository.entities.AdministrativeBoundarySearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.AdministrativeBoundaryWithGeomSearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.GeoJsonAdministrativeBoundary;
+import org.sola.cs.services.ejb.search.repository.entities.GeoJsonClaim;
 import org.sola.cs.services.ejb.search.repository.entities.MapSearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.PublicDisplaySearchResult;
 import org.sola.services.common.ejbs.AbstractEJBLocal;
 import org.sola.cs.services.ejb.search.spatial.QueryForNavigation;
 import org.sola.cs.services.ejb.search.spatial.QueryForPublicDisplayMap;
@@ -287,6 +292,51 @@ public interface SearchCSEJBLocal extends AbstractEJBLocal {
      */
     List<SpatialResult> getPlanCadastreObjects(String cadastreObjectId);
 
+    /**
+     * See {@linkplain SearchEJB#searchAllAdministrativeBoundaries()}.
+     */
+    List<AdministrativeBoundarySearchResult> searchAllAdministrativeBoundaries(String langCode);
+    
+    /**
+     * See {@linkplain SearchEJB#searchParentAdministrativeBoundaries()}.
+     */
+    List<AdministrativeBoundarySearchResult> searchParentAdministrativeBoundaries(String langCode);
+    
+    /**
+     * See {@linkplain SearchEJB#searchChildAdministrativeBoundaries()}.
+     */
+    List<AdministrativeBoundarySearchResult> searchChildAdministrativeBoundaries(String parentId, String langCode);
+    
+    /**
+     * See {@linkplain SearchEJB#searchParentAdministrativeBoundaries()}.
+     */
+    List<AdministrativeBoundarySearchResult> searchParentAdministrativeBoundaries(String id, String langCode);
+    
+    /**
+     * See {@linkplain SearchEJB#getAdministrativeBoundaryByCoordinates(String, String)}.
+     */
+    AdministrativeBoundaryWithGeomSearchResult getAdministrativeBoundaryByCoordinates(String x, String y, String langCode);
+    
+    /**
+     * See {@linkplain SearchEJB#getFullLocation(String, String)}.
+     */
+    String getFullLocation(String boundaryId, String langCode);
+  
+    /**
+     * See {@linkplain SearchEJB#getGeoJsonClaimsByBoundary(String)}.
+     */
+    List<GeoJsonClaim> getGeoJsonClaimsByBoundary(String boundaryId);
+    
+    /**
+     * See {@linkplain SearchEJB#getGeoJsonAdministrativeBoundary(String)}.
+     */
+    GeoJsonAdministrativeBoundary getGeoJsonAdministrativeBoundary(String id);
+    
+    /**
+     * See {@linkplain SearchEJB#searchClaimsForPublicDisplay(String, String)}.
+     */
+    List<PublicDisplaySearchResult> searchClaimsForPublicDisplay(String langCode, String boundaryId);
+    
     /**
      * See {@linkplain SearchEJB#transform(byte[], int)}.
      */

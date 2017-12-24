@@ -3,6 +3,7 @@ package org.sola.cs.services.ejbs.claim.businesslogic;
 import java.util.List;
 import javax.ejb.Local;
 import org.sola.cs.services.ejb.refdata.entities.SourceType;
+import org.sola.cs.services.ejbs.claim.entities.AdministrativeBoundary;
 import org.sola.cs.services.ejbs.claim.entities.Attachment;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentBinary;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentChunk;
@@ -79,4 +80,8 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     Restriction terminateRestriction(String restrictionId);
     void mergeClaims(List<Claim> oldClaims, Claim newClaim);
     void splitClaim(Claim oldClaim, List<Claim> newClaims);
+    AdministrativeBoundary getAdministrativeBoundary(String id);
+    AdministrativeBoundary saveAdministrativeBoundary(AdministrativeBoundary boundary);
+    void deleteAdministrativeBoundary(String boundaryId);
+    boolean approveAdministrativeBoundary(String boundaryId);
 }

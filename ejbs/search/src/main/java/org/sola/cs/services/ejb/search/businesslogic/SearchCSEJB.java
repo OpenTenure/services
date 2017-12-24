@@ -77,7 +77,12 @@ import org.sola.services.common.ejbs.AbstractEJB;
 import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 import org.sola.cs.services.ejb.search.repository.SearchSqlProvider;
+import org.sola.cs.services.ejb.search.repository.entities.AdministrativeBoundarySearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.AdministrativeBoundaryWithGeomSearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.GeoJsonAdministrativeBoundary;
+import org.sola.cs.services.ejb.search.repository.entities.GeoJsonClaim;
 import org.sola.cs.services.ejb.search.repository.entities.MapSearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.PublicDisplaySearchResult;
 import org.sola.cs.services.ejb.search.spatial.QueryForNavigation;
 import org.sola.cs.services.ejb.search.spatial.QueryForPublicDisplayMap;
 import org.sola.cs.services.ejb.search.spatial.QueryForSelect;
@@ -105,7 +110,7 @@ import org.sola.cs.services.ejb.search.spatial.ResultForSelectionInfo;
 @Stateless
 @EJB(name = "java:app/SearchCSEJBLocal", beanInterface = SearchCSEJBLocal.class)
 public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
-    
+
     /**
      * Retrieves the SQL for the dynamic query from the system.query table
      *
@@ -339,20 +344,20 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         Map params = new HashMap<String, Object>();
         params.put(SourceSearchResult.QUERY_PARAM_FROM_RECORDATION_DATE,
                 searchParams.getFromRecordationDate() == null
-                ? new GregorianCalendar(1, 1, 1).getTime()
-                : searchParams.getFromRecordationDate());
+                        ? new GregorianCalendar(1, 1, 1).getTime()
+                        : searchParams.getFromRecordationDate());
         params.put(SourceSearchResult.QUERY_PARAM_TO_RECORDATION_DATE,
                 searchParams.getToRecordationDate() == null
-                ? new GregorianCalendar(2500, 1, 1).getTime()
-                : searchParams.getToRecordationDate());
+                        ? new GregorianCalendar(2500, 1, 1).getTime()
+                        : searchParams.getToRecordationDate());
         params.put(SourceSearchResult.QUERY_PARAM_FROM_SUBMISSION_DATE,
                 searchParams.getFromSubmissionDate() == null
-                ? new GregorianCalendar(1, 1, 1).getTime()
-                : searchParams.getFromSubmissionDate());
+                        ? new GregorianCalendar(1, 1, 1).getTime()
+                        : searchParams.getFromSubmissionDate());
         params.put(SourceSearchResult.QUERY_PARAM_TO_SUBMISSION_DATE,
                 searchParams.getToSubmissionDate() == null
-                ? new GregorianCalendar(2500, 1, 1).getTime()
-                : searchParams.getToSubmissionDate());
+                        ? new GregorianCalendar(2500, 1, 1).getTime()
+                        : searchParams.getToSubmissionDate());
         params.put(SourceSearchResult.QUERY_PARAM_TYPE_CODE,
                 searchParams.getTypeCode() == null ? "" : searchParams.getTypeCode());
         params.put(SourceSearchResult.QUERY_PARAM_REF_NUMBER,
@@ -534,9 +539,8 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         params.put(PartySearchResult.QUERY_PARAM_ROLE_TYPE_CODE, searchParams.getRoleTypeCode());
         return getRepository().getEntityList(PartySearchResult.class, params);
     }
-    
-    
-      /**
+
+    /**
      * Executes a search across all parties using the search criteria provided.
      * Partial matches are supported for the party name criteria.
      *
@@ -567,8 +571,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         return getRepository().getEntityList(PartyPropertySearchResult.class, params);
     }
 
-    
-       /**
+    /**
      * Executes a search across all parties using the search criteria provided.
      * Partial matches are supported for the party name criteria.
      *
@@ -591,8 +594,6 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         return getRepository().getEntityList(NotifiablePartySearchResult.class, params);
     }
 
-    
-    
     /**
      * Used for navigation (i.e. pan and zoom) of the Map. Executes a dynamic
      * layer query using the bounding box details provided in the search
@@ -830,7 +831,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
 
         params.put(CommonSqlProvider.PARAM_QUERY,
                 SearchSqlProvider.buildSearchBaUnitSql(searchParams.getNameFirstPart(),
-                searchParams.getNameLastPart(), searchParams.getOwnerName()));
+                        searchParams.getNameLastPart(), searchParams.getOwnerName()));
         params.put(BaUnitSearchResult.QUERY_PARAM_OWNER_NAME, searchParams.getOwnerName());
         params.put(BaUnitSearchResult.QUERY_PARAM_NAME_FIRSTPART, searchParams.getNameFirstPart());
         params.put(BaUnitSearchResult.QUERY_PARAM_NAME_LASTPART, searchParams.getNameLastPart());
@@ -958,8 +959,8 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         params.put(ClaimSearchResult.PARAM_RECORDER, getUserName());
         params.put(ClaimSpatialSearchResult.PARAM_ENVELOPE,
                 String.format(ClaimSpatialSearchResult.ENVELOPE,
-                searchParams.getMinX(), searchParams.getMinY(),
-                searchParams.getMaxX(), searchParams.getMaxY()));
+                        searchParams.getMinX(), searchParams.getMinY(),
+                        searchParams.getMaxX(), searchParams.getMaxY()));
         return getRepository().getEntityList(ClaimSpatialSearchResult.class, params);
     }
 
@@ -986,7 +987,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
      * @return
      */
     @Override
-    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    //@RolesAllowed({RolesConstants.CS_ACCESS_CS})
     public ClaimSearchResult getClaimByCoordinates(String x, String y, String langCode) {
         if (StringUtility.isEmpty(x) || StringUtility.isEmpty(y)) {
             return null;
@@ -998,7 +999,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         params.put(ClaimSearchResult.PARAM_POINT, point);
         params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
         List<ClaimSearchResult> list = getRepository().getEntityList(ClaimSearchResult.class, params);
-        if(list == null){
+        if (list == null || list.size() < 1) {
             return null;
         } else {
             return list.get(0);
@@ -1017,7 +1018,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         Map params = new HashMap<String, Object>();
 
         // prepare params
-        if(searchParams.getLodgementDateFrom() != null || searchParams.getLodgementDateTo() != null){
+        if (searchParams.getLodgementDateFrom() != null || searchParams.getLodgementDateTo() != null) {
             searchParams.setLodgementDateFrom(DateUtility.minimizeDate(searchParams.getLodgementDateFrom()));
             searchParams.setLodgementDateTo(DateUtility.maximizeDate(searchParams.getLodgementDateTo()));
         }
@@ -1043,35 +1044,36 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
     }
 
     @Override
-    public List<MapSearchResult> searchMap(String searchString){
+    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public List<MapSearchResult> searchMap(String searchString) {
         Map params = new HashMap<String, Object>();
         String name = "";
         String point = "";
         String claimNumber = "";
-        
+
         // prepare params
-        if(!StringUtility.isEmpty(searchString)){
+        if (!StringUtility.isEmpty(searchString)) {
             searchString = searchString.trim().replace("#", "");
             // Try to guess parameters
             String numbers[] = searchString.replace(" ", "").split(",");
-            if(numbers != null && numbers.length > 1){
-                if(NumberUtils.isNumber(numbers[0]) && NumberUtils.isNumber(numbers[1])){
+            if (numbers != null && numbers.length > 1) {
+                if (NumberUtils.isNumber(numbers[0]) && NumberUtils.isNumber(numbers[1])) {
                     point = String.format("POINT(%s %s)", numbers[0], numbers[1]);
                 }
             } else {
-               name = searchString;
-               claimNumber = searchString;
+                name = searchString;
+                claimNumber = searchString;
             }
         }
-        
+
         params.put(CommonSqlProvider.PARAM_QUERY, MapSearchResult.QUERY_SEARCH);
         params.put(MapSearchResult.PARAM_NAME, name);
         params.put(MapSearchResult.PARAM_CLAIM_NUMBER, claimNumber);
         params.put(MapSearchResult.PARAM_POINT, point);
-        
+
         return getRepository().getEntityList(MapSearchResult.class, params);
     }
-    
+
     @Override
     public List<SpatialResult> getPlanCadastreObjects(String cadastreObjectId) {
         Map params = new HashMap<String, Object>();
@@ -1084,7 +1086,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
     public byte[] transform(byte[] wkbGeom, int srid) {
         Map params = new HashMap();
         params.put(
-                CommonSqlProvider.PARAM_QUERY, 
+                CommonSqlProvider.PARAM_QUERY,
                 "select st_asewkb(st_transform(#{geom}, #{srid}))");
         params.put("srid", srid);
         params.put("geom", wkbGeom);
@@ -1107,13 +1109,13 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         Map params = new HashMap<String, Object>();
 
         params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
-        
-        if(includeAssigned){
+
+        if (includeAssigned) {
             params.put(CommonSqlProvider.PARAM_QUERY, ClaimSearchResult.QUERY_SEARCH_FOR_REVIEW_ALL);
         } else {
             params.put(CommonSqlProvider.PARAM_QUERY, ClaimSearchResult.QUERY_SEARCH_FOR_REVIEW);
         }
-        
+
         return getRepository().getEntityList(ClaimSearchResult.class, params);
     }
 
@@ -1123,13 +1125,129 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         Map params = new HashMap<String, Object>();
 
         params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
-        
-        if(includeAssigned){
+
+        if (includeAssigned) {
             params.put(CommonSqlProvider.PARAM_QUERY, ClaimSearchResult.QUERY_SEARCH_FOR_MODERATION_ALL);
         } else {
             params.put(CommonSqlProvider.PARAM_QUERY, ClaimSearchResult.QUERY_SEARCH_FOR_MODERATION);
         }
-        
+
         return getRepository().getEntityList(ClaimSearchResult.class, params);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public List<AdministrativeBoundarySearchResult> searchAllAdministrativeBoundaries(String langCode) {
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
+        params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundarySearchResult.QUERY_GET_ALL);
+        return getRepository().getEntityList(AdministrativeBoundarySearchResult.class, params);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public List<AdministrativeBoundarySearchResult> searchParentAdministrativeBoundaries(String langCode) {
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
+        params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundarySearchResult.QUERY_GET_ALL_PARENTS);
+        return getRepository().getEntityList(AdministrativeBoundarySearchResult.class, params);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public List<AdministrativeBoundarySearchResult> searchChildAdministrativeBoundaries(String parentId, String langCode) {
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
+        params.put(AdministrativeBoundarySearchResult.PARAM_PARENT_ID, parentId);
+        params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundarySearchResult.QUERY_GET_CHILDREN);
+        return getRepository().getEntityList(AdministrativeBoundarySearchResult.class, params);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public List<AdministrativeBoundarySearchResult> searchParentAdministrativeBoundaries(String id, String langCode) {
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
+        params.put(AdministrativeBoundarySearchResult.PARAM_ID, id);
+        params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundarySearchResult.QUERY_GET_PARENTS);
+        return getRepository().getEntityList(AdministrativeBoundarySearchResult.class, params);
+    }
+
+    @Override
+    public String getFullLocation(String boundaryId, String langCode) {
+        List<AdministrativeBoundarySearchResult> boundaries = searchParentAdministrativeBoundaries(boundaryId, langCode);
+        if (boundaries == null || boundaries.size() < 1) {
+            return "";
+        }
+        String location = "";
+        for (AdministrativeBoundarySearchResult boundary : boundaries) {
+            if (location.equals("")) {
+                location = boundary.getName();
+            } else {
+                location = location + ", " + boundary.getName();
+            }
+        }
+        return location;
+    }
+
+    /**
+     * Returns {@link AdministrativeBoundaryWithGeomSearchResult} by x and y
+     * coordinates.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param langCode Language code
+     * @return
+     */
+    //@RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    @Override
+    public AdministrativeBoundaryWithGeomSearchResult getAdministrativeBoundaryByCoordinates(String x, String y, String langCode) {
+        if (StringUtility.isEmpty(x) || StringUtility.isEmpty(y)) {
+            return null;
+        }
+
+        String point = "POINT(" + x + " " + y + ")";
+        HashMap params = new HashMap();
+        params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundaryWithGeomSearchResult.QUERY_SEARCH_BY_POINT);
+        params.put(AdministrativeBoundaryWithGeomSearchResult.PARAM_POINT, point);
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
+        List<AdministrativeBoundaryWithGeomSearchResult> list = getRepository().getEntityList(AdministrativeBoundaryWithGeomSearchResult.class, params);
+        if (list == null || list.size() < 1) {
+            return null;
+        } else {
+            return list.get(0);
+        }
+    }
+
+    //@RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    @Override
+    public List<GeoJsonClaim> getGeoJsonClaimsByBoundary(String boundaryId) {
+        HashMap params = new HashMap();
+        if (StringUtility.isEmpty(boundaryId)) {
+            params.put(CommonSqlProvider.PARAM_QUERY, GeoJsonClaim.QUERY_SEARCH_ALL);
+        } else {
+            params.put(CommonSqlProvider.PARAM_QUERY, GeoJsonClaim.QUERY_SEARCH_BY_BOUNDARY);
+            params.put(GeoJsonClaim.PARAM_BOUNDARY_ID, boundaryId);
+        }
+        return getRepository().getEntityList(GeoJsonClaim.class, params);
+    }
+
+    //@RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    @Override
+    public GeoJsonAdministrativeBoundary getGeoJsonAdministrativeBoundary(String id) {
+        HashMap params = new HashMap();
+        params.put(CommonSqlProvider.PARAM_QUERY, GeoJsonAdministrativeBoundary.QUERY_SEARCH_BY_ID);
+        params.put(GeoJsonAdministrativeBoundary.PARAM_ID, id);
+        return getRepository().getEntity(GeoJsonAdministrativeBoundary.class, params);
+    }
+    
+    @RolesAllowed({RolesConstants.CS_VIEW_REPORTS})
+    @Override
+    public List<PublicDisplaySearchResult> searchClaimsForPublicDisplay(String langCode, String boundaryId){
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
+        params.put(PublicDisplaySearchResult.PARAM_BOUNDARY_ID, StringUtility.empty(boundaryId));
+        params.put(CommonSqlProvider.PARAM_QUERY, PublicDisplaySearchResult.QUERY_SEARCH_BY_BOUNDARY);
+        return getRepository().getEntityList(PublicDisplaySearchResult.class, params);
     }
 }

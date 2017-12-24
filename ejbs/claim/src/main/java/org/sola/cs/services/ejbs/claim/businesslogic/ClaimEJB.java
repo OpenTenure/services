@@ -24,7 +24,11 @@ import org.sola.common.StringUtility;
 import org.sola.cs.common.messaging.MessageUtility;
 import org.sola.cs.common.messaging.ServiceMessage;
 import org.sola.cs.services.ejb.refdata.businesslogic.RefDataCSEJBLocal;
+import org.sola.cs.services.ejb.refdata.entities.AdministrativeBoundaryStatus;
+import org.sola.cs.services.ejb.refdata.entities.AdministrativeBoundaryType;
 import org.sola.cs.services.ejb.refdata.entities.SourceType;
+import org.sola.cs.services.ejb.search.businesslogic.SearchCSEJBLocal;
+import org.sola.cs.services.ejb.search.repository.entities.AdministrativeBoundarySearchResult;
 import org.sola.cs.services.ejbs.claim.entities.Attachment;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentBinary;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentChunk;
@@ -58,6 +62,7 @@ import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.cs.services.ejb.system.businesslogic.SystemCSEJBLocal;
 import org.sola.cs.services.ejbs.admin.businesslogic.AdminCSEJBLocal;
 import org.sola.cs.services.ejbs.admin.businesslogic.repository.entities.User;
+import org.sola.cs.services.ejbs.claim.entities.AdministrativeBoundary;
 import org.sola.cs.services.ejbs.claim.entities.Restriction;
 import org.sola.cs.services.ejbs.claim.entities.TerminationReason;
 
@@ -76,6 +81,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
     @EJB
     RefDataCSEJBLocal refDataEjb;
+
+    @EJB
+    SearchCSEJBLocal searchEjb;
 
     private static final int DPI = 96;
     private static final String resourcesPath = "/styles/";
@@ -645,8 +653,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 if (attch == null) {
                     missingAttachments.add(claimAttch.getId());
                 } else // Check user name on attachment
-                {
-                    if (!canEditOtherClaims && !attch.getUserName().equalsIgnoreCase(userName)
+                 if (!canEditOtherClaims && !attch.getUserName().equalsIgnoreCase(userName)
                             && !attch.getUserName().equalsIgnoreCase(challengedClaimUser)) {
                         if (throwException) {
                             throw new SOLAException(ServiceMessage.EXCEPTION_OBJECT_ACCESS_RIGHTS);
@@ -654,7 +661,6 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                             return false;
                         }
                     }
-                }
             }
 
             if (missingAttachments.size() > 0) {
@@ -2449,12 +2455,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (attch == null) {
             throw new SOLAException(ServiceMessage.OT_WS_MISSING_SERVER_ATTACHMENTS);
         } else // Check user name on attachment
-        {
-            if (!isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)
+         if (!isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)
                     && !attch.getUserName().equalsIgnoreCase(getUserName())) {
                 throw new SOLAException(ServiceMessage.EXCEPTION_OBJECT_ACCESS_RIGHTS);
             }
-        }
 
         // Incraese claim row version by save without changes. This is required 
         // to indicate that there are changes on the claim in general
@@ -2580,5 +2584,125 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     @Override
     public List<FieldConstraintType> getFieldConstraintTypes(String languageCode) {
         return getRepository().getCodeList(FieldConstraintType.class, languageCode);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public AdministrativeBoundary getAdministrativeBoundary(String id) {
+        if (id != null) {
+            return getRepository().getEntity(AdministrativeBoundary.class, id);
+        }
+        return null;
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_RECORD_CLAIM})
+    public AdministrativeBoundary saveAdministrativeBoundary(AdministrativeBoundary boundary) {
+        if (boundary == null) {
+            throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
+        }
+
+        // Get db boundary
+        AdministrativeBoundary dbBoundary = getAdministrativeBoundary(boundary.getId());
+
+        // Check name
+        if (StringUtility.isEmpty(boundary.getName())) {
+            throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_NAME_EMPTY);
+        }
+
+        // Check type
+        if (StringUtility.isEmpty(boundary.getTypeCode())) {
+            throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_TYPE_EMPTY);
+        }
+
+        // Check status
+        if (dbBoundary != null && dbBoundary.getStatusCode().equalsIgnoreCase(AdministrativeBoundaryStatus.STATUS_APPROVED)) {
+            throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_APPROVED, new Object[]{StringUtility.empty(boundary.getName())});
+        }
+
+        // Set status
+        boundary.setStatusCode(AdministrativeBoundaryStatus.STATUS_PENDING);
+
+        // Geom
+        if (StringUtility.isEmpty(boundary.getGeom())) {
+            boundary.setGeom(null);
+        }
+        
+        // Parent
+        if (StringUtility.isEmpty(boundary.getParentId())) {
+            boundary.setParentId(null);
+        } else {
+            // Check parent
+            if (boundary.getId().equalsIgnoreCase(boundary.getParentId())) {
+                throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_SELF_PARENT);
+            }
+            // Get child records
+            List<AdministrativeBoundarySearchResult> childBoundaries = searchEjb.searchChildAdministrativeBoundaries(boundary.getId(), null);
+            if (childBoundaries != null && childBoundaries.size() > 0) {
+                for (AdministrativeBoundarySearchResult child : childBoundaries) {
+                    if (child.getId().equalsIgnoreCase(boundary.getParentId())) {
+                        throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_CHILD_PARENT);
+                    }
+                }
+            }
+        }
+
+        // Save       
+        return getRepository().saveEntity(boundary);
+    }
+
+    @Override
+    @RolesAllowed({RolesConstants.CS_RECORD_CLAIM})
+    public void deleteAdministrativeBoundary(String boundaryId) {
+        if (StringUtility.isEmpty(boundaryId)) {
+            throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
+        }
+
+        // Get db boundary
+        AdministrativeBoundary dbBoundary = getAdministrativeBoundary(boundaryId);
+        if(dbBoundary == null){
+            throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
+        }
+        
+        // Check status
+        if (dbBoundary.getStatusCode().equalsIgnoreCase(AdministrativeBoundaryStatus.STATUS_APPROVED)) {
+            throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_APPROVED, new Object[]{StringUtility.empty(dbBoundary.getName())});
+        }
+
+        // Check children
+        List<AdministrativeBoundarySearchResult> childBoundaries = searchEjb.searchChildAdministrativeBoundaries(boundaryId, null);
+        if (childBoundaries != null && childBoundaries.size() > 0) {
+            throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_HAS_CHILD);
+        }
+
+        // Delete
+        dbBoundary.setEntityAction(EntityAction.DELETE);
+        getRepository().saveEntity(dbBoundary);
+    }
+    
+    @Override
+    @RolesAllowed({RolesConstants.CS_MODERATE_CLAIM})
+    public boolean approveAdministrativeBoundary(String boundaryId){
+        if (StringUtility.isEmpty(boundaryId)) {
+            throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
+        }
+
+        // Get db boundary
+        AdministrativeBoundary dbBoundary = getAdministrativeBoundary(boundaryId);
+        if(dbBoundary == null){
+            throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
+        }
+        
+        // Check status
+        if (dbBoundary.getStatusCode().equalsIgnoreCase(AdministrativeBoundaryStatus.STATUS_APPROVED)) {
+            throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_APPROVED, new Object[]{StringUtility.empty(dbBoundary.getName())});
+        }
+
+        dbBoundary.setStatusCode(AdministrativeBoundaryStatus.STATUS_APPROVED);
+        
+        // Save
+        getRepository().saveEntity(dbBoundary);
+        
+        return true;
     }
 }
