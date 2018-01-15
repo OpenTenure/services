@@ -2619,6 +2619,13 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (dbBoundary != null && dbBoundary.getStatusCode().equalsIgnoreCase(AdministrativeBoundaryStatus.STATUS_APPROVED)) {
             throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_APPROVED, new Object[]{StringUtility.empty(boundary.getName())});
         }
+        
+        // Set recorder
+        if(dbBoundary == null){
+            boundary.setRecorderName(getUserName());
+        } else {
+            boundary.setRecorderName(dbBoundary.getRecorderName());
+        }
 
         // Set status
         boundary.setStatusCode(AdministrativeBoundaryStatus.STATUS_PENDING);

@@ -20,6 +20,8 @@ public class AdministrativeBoundary extends AbstractVersionedEntity {
     private String authorityName;
     @Column(name = "parent_id")
     private String parentId;
+    @Column(name = "recorder_name")
+    private String recorderName;
     @Column(name = "status_code")
     private String statusCode;
     @Column(name = "geom")
@@ -69,6 +71,14 @@ public class AdministrativeBoundary extends AbstractVersionedEntity {
 
     public void setParentId(String parentId) {
         this.parentId = parentId;
+    }
+
+    public String getRecorderName() {
+        return recorderName;
+    }
+
+    public void setRecorderName(String recorderName) {
+        this.recorderName = recorderName;
     }
 
     public String getStatusCode() {
