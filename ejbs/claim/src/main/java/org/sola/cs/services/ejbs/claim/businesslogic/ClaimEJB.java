@@ -2596,6 +2596,14 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
+    //@RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public List<AdministrativeBoundary> getApprovedAdministrativeBoundaries(){
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundary.QUERY_SELECT_APPROVED);
+        return getRepository().getEntityList(AdministrativeBoundary.class, params);
+    }
+    
+    @Override
     @RolesAllowed({RolesConstants.CS_RECORD_CLAIM})
     public AdministrativeBoundary saveAdministrativeBoundary(AdministrativeBoundary boundary) {
         if (boundary == null) {

@@ -298,6 +298,11 @@ public interface SearchCSEJBLocal extends AbstractEJBLocal {
     List<AdministrativeBoundarySearchResult> searchAllAdministrativeBoundaries(String langCode);
     
     /**
+     * See {@linkplain SearchEJB#searchApprovedAdministrativeBoundaries()}.
+     */
+    List<AdministrativeBoundarySearchResult> searchApprovedAdministrativeBoundaries(String langCode);
+    
+    /**
      * See {@linkplain SearchEJB#searchParentAdministrativeBoundaries()}.
      */
     List<AdministrativeBoundarySearchResult> searchParentAdministrativeBoundaries(String langCode);

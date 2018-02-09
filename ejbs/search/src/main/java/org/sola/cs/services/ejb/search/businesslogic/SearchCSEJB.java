@@ -1143,6 +1143,15 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundarySearchResult.QUERY_GET_ALL);
         return getRepository().getEntityList(AdministrativeBoundarySearchResult.class, params);
     }
+    
+    @Override
+    @RolesAllowed({RolesConstants.CS_ACCESS_CS})
+    public List<AdministrativeBoundarySearchResult> searchApprovedAdministrativeBoundaries(String langCode) {
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, langCode);
+        params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundarySearchResult.QUERY_GET_APPROVED);
+        return getRepository().getEntityList(AdministrativeBoundarySearchResult.class, params);
+    }
 
     @Override
     @RolesAllowed({RolesConstants.CS_ACCESS_CS})

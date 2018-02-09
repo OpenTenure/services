@@ -81,6 +81,7 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     void mergeClaims(List<Claim> oldClaims, Claim newClaim);
     void splitClaim(Claim oldClaim, List<Claim> newClaims);
     AdministrativeBoundary getAdministrativeBoundary(String id);
+    List<AdministrativeBoundary> getApprovedAdministrativeBoundaries();
     AdministrativeBoundary saveAdministrativeBoundary(AdministrativeBoundary boundary);
     void deleteAdministrativeBoundary(String boundaryId);
     boolean approveAdministrativeBoundary(String boundaryId);

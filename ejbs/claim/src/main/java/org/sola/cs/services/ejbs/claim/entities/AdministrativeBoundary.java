@@ -29,6 +29,19 @@ public class AdministrativeBoundary extends AbstractVersionedEntity {
             onChange = "ST_GeomFromText(#{geom})")
     private String geom;
 
+    public static final String QUERY_SELECT_APPROVED = "WITH RECURSIVE all_administrative_boundaries AS (\n"
+            + " SELECT id, name, type_code, authority_name, parent_id, recorder_name, status_code, ST_AsText(geom) as geom, rowversion, change_user, rowidentifier, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path \n"
+            + " FROM opentenure.administrative_boundary \n"
+            + " WHERE parent_id is null and status_code = 'approved' \n"
+            + "UNION \n"
+            + " SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.recorder_name, b.status_code, ST_AsText(b.geom) as geom, b.rowversion, b.change_user, b.rowidentifier, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path \n"
+            + " FROM opentenure.administrative_boundary b inner join all_administrative_boundaries ab on b.parent_id = ab.id \n"
+            + " WHERE b.status_code = 'approved' \n"
+            + ")\n"
+            + "SELECT id, name, type_code, authority_name, parent_id, recorder_name, status_code, geom, rowversion, change_user, rowidentifier \n"
+            + "FROM all_administrative_boundaries \n"
+            + "ORDER BY path, level;";
+
     public AdministrativeBoundary() {
         super();
     }

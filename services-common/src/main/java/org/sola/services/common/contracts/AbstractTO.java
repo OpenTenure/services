@@ -32,11 +32,13 @@
 package org.sola.services.common.contracts;
 
 import java.io.Serializable;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  *
  * @author manoku
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class AbstractTO implements Serializable {
 
     @Override
