@@ -25,7 +25,6 @@ import org.sola.cs.common.messaging.MessageUtility;
 import org.sola.cs.common.messaging.ServiceMessage;
 import org.sola.cs.services.ejb.refdata.businesslogic.RefDataCSEJBLocal;
 import org.sola.cs.services.ejb.refdata.entities.AdministrativeBoundaryStatus;
-import org.sola.cs.services.ejb.refdata.entities.AdministrativeBoundaryType;
 import org.sola.cs.services.ejb.refdata.entities.SourceType;
 import org.sola.cs.services.ejb.search.businesslogic.SearchCSEJBLocal;
 import org.sola.cs.services.ejb.search.repository.entities.AdministrativeBoundarySearchResult;
@@ -85,8 +84,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     @EJB
     SearchCSEJBLocal searchEjb;
 
+    private static final String RESULT = "result";
     private static final int DPI = 96;
-    private static final String resourcesPath = "/styles/";
+    private static final String RESOURCES_PATH = "/styles/";
     private final int mapMargin = 30;
     private final int minGridCuts = 1;
     private final int coordWidth = 67;
@@ -421,9 +421,25 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
         }
 
+        // check if claimant is new (insert) or not (swap for reference)
+        ClaimParty claimant = getRepository().getEntity(ClaimParty.class, claim.getClaimantId());
+        if (claimant != null) {
+            claim.setClaimant(claimant);
+        }
+        
+        // check if ownsers are new (insert) or not (swap for reference)
+        ClaimParty owner;
+        for (ClaimShare share : claim.getShares()) {
+            for (int i=0; i<share.getOwners().size(); i++) {
+                owner = getRepository().getEntity(ClaimParty.class, share.getOwners().get(i).getId());
+                if (owner != null) {
+                    share.getOwners().set(i, owner);
+                }
+            }
+        }
+        
         // Save claim
         claim = getRepository().saveEntity(claim);
-
         // Clean up chunks just in case
         deleteClaimChunks(claim.getId());
 
@@ -446,6 +462,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
         return getRepository().getEntity(Claim.class, claim.getId());
     }
+    
+  
 
     private String cleanupGeometry(String geom) {
         if (geom == null) {
@@ -547,6 +565,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
         }
 
+        /*
         if (newClaim) {
             // Check claimant doesn't exist
             if (getRepository().getEntity(ClaimParty.class, claim.getClaimant().getId()) != null) {
@@ -557,6 +576,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 }
             }
         }
+        */
 
         // Only recorders can submit new claims
         if (newClaim && !isInRole(RolesConstants.CS_RECORD_CLAIM)) {
@@ -718,6 +738,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                                     }
                                 }
 
+                                /*
                                 if (newClaim) {
                                     // Check owner doesn't exist
                                     if (getRepository().getEntity(ClaimParty.class, claimParty.getId()) != null) {
@@ -728,6 +749,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                                         }
                                     }
                                 }
+                                */
                             }
                         }
                     }
@@ -880,7 +902,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (result == null || result.size() < 1) {
             return 0;
         } else {
-            long area = (long) Double.parseDouble(result.get(0).get("result").toString());
+            long area = (long) Double.parseDouble(result.get(0).get(RESULT).toString());
             if (area % 5 >= 4) {
                 return (area - (area % 5)) + 5;
             }
@@ -905,7 +927,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (result == null || result.size() < 1) {
             return false;
         } else {
-            return result.get(0).get("result") != null && Boolean.parseBoolean(result.get(0).get("result").toString());
+            return result.get(0).get(RESULT) != null && Boolean.parseBoolean(result.get(0).get(RESULT).toString());
         }
     }
 
@@ -2557,7 +2579,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (result == null || result.size() < 1) {
             return false;
         } else {
-            return result.get(0).get("result") != null && Boolean.parseBoolean(result.get(0).get("result").toString());
+            return result.get(0).get(RESULT) != null && Boolean.parseBoolean(result.get(0).get(RESULT).toString());
         }
     }
 

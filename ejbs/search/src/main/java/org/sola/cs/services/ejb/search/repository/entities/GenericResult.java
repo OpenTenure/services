@@ -39,9 +39,6 @@ public class GenericResult {
     private String[] fieldNames = new String[0];
     private List<String[]> values = new ArrayList<String[]>();
 
-    public GenericResult() {
-    }
-
     public String[] getFieldNames() {
         return fieldNames;
     }

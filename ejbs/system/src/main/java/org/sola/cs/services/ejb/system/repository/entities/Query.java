@@ -23,9 +23,6 @@ public class Query extends AbstractEntity {
     
     @ChildEntityList(parentIdField = "queryName")
     private List<QueryField> fields;
-    
-    public Query(){
-    }
 
     public String getName() {
         return name;

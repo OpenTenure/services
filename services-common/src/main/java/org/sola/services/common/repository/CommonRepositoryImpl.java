@@ -67,6 +67,8 @@ public class CommonRepositoryImpl implements CommonRepository {
      * mybatisConnectionConfig.xml
      */
     private static final String LOAD_INHIBITORS = "Repository.loadInhibitors";
+    private static final String EQUALS_PARENT_ID = " = #{parentId}";
+    private static final String PARENT_ID = "parentId";
     private DatabaseConnectionManager dbConnectionManager = null;
     CacheCSEJBLocal cache;
 
@@ -271,8 +273,8 @@ public class CommonRepositoryImpl implements CommonRepository {
                 String parentIdColumn = RepositoryUtility.getColumnInfo(childEntityClass,
                         childInfo.getParentIdField()).getColumnName();
                 params.put(CommonSqlProvider.PARAM_WHERE_PART,
-                        parentIdColumn + " = #{parentId}");
-                params.put("parentId", parentEntity.getEntityId());
+                        parentIdColumn + EQUALS_PARENT_ID);
+                params.put(PARENT_ID, parentEntity.getEntityId());
                 loadChild = true;
             }
         }
@@ -891,6 +893,7 @@ public class CommonRepositoryImpl implements CommonRepository {
      */
     protected <T extends AbstractEntity, U extends CommonMapper> void saveOtherEntity(T entity,
             ChildEntityInfo childInfo, boolean beforeSave, U mapper) {
+        // placeholder method
     }
 
     /**
@@ -1049,11 +1052,11 @@ public class CommonRepositoryImpl implements CommonRepository {
         // Construct the WHERE clause
         String parentIdColumn = RepositoryUtility.getColumnInfo(entityClass,
                 parentIdField).getColumnName();
-        String whereClause = parentIdColumn + " = #{parentId}";
+        String whereClause = parentIdColumn + EQUALS_PARENT_ID;
         params.put(CommonSqlProvider.PARAM_WHERE_PART, whereClause);
 
         // Set the parent id parameter
-        params.put("parentId", parentId);
+        params.put(PARENT_ID, parentId);
 
         return getScalarList(String.class, params, mapper);
     }
@@ -1442,12 +1445,12 @@ public class CommonRepositoryImpl implements CommonRepository {
                 // Construct the WHERE clause for a One to Many association
                 String parentIdColumn = RepositoryUtility.getColumnInfo(childEntityClass,
                         parentIdField).getColumnName();
-                String whereClause = parentIdColumn + " = #{parentId}";
+                String whereClause = parentIdColumn + EQUALS_PARENT_ID;
                 params.put(CommonSqlProvider.PARAM_WHERE_PART, whereClause);
             }
 
             // Set the parent id parameter
-            params.put("parentId", parentEntity.getEntityId());
+            params.put(PARENT_ID, parentEntity.getEntityId());
         }
         List<V> result = getEntityList(childEntityClass, params, mapper);
         return result == null ? new ArrayList<V>() : result;
@@ -1574,6 +1577,7 @@ public class CommonRepositoryImpl implements CommonRepository {
      */
     protected <T extends AbstractReadOnlyEntity, U extends CommonMapper> void loadOtherEntity(T entity,
             ChildEntityInfo childInfo, U mapper) {
+        // placeholder method
     }
 
     /**

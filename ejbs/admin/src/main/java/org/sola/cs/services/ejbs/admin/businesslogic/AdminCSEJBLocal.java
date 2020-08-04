@@ -43,6 +43,8 @@ import org.sola.cs.services.ejbs.admin.businesslogic.repository.entities.Languag
  * Local interface for the {@linkplain AdminEJB}.
  */
 public interface AdminCSEJBLocal extends AbstractEJBLocal {
+    static final String FOUND = ">>> Found ";
+    static final String FAILED_GET_GROUP = "Failed to get group";
 
     /**
      * See {@linkplain AdminEJB#getUsers()

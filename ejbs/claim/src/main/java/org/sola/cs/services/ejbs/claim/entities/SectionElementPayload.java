@@ -40,7 +40,4 @@ public class SectionElementPayload extends AbstractVersionedEntity {
     public void setSectionPayloadId(String sectionPayloadId) {
         this.sectionPayloadId = sectionPayloadId;
     }
-    
-    public SectionElementPayload(){
-    }
 }

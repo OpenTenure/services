@@ -70,7 +70,7 @@ public class MapImageEJB extends AbstractEJB implements MapImageEJBLocal {
     AdminCSEJBLocal adminEjb;
 
     private static final int DPI = 96;
-    private static final String resourcesPath = "/styles/";
+    private static final String RESOURCES_PATH = "/styles/";
     private final int mapMargin = 30;
     private final int minGridCuts = 1;
     private final int coordWidth = 67;
@@ -153,7 +153,7 @@ public class MapImageEJB extends AbstractEJB implements MapImageEJBLocal {
             map.getViewport().setCoordinateReferenceSystem(crs);
 
             StyleFactory styleFactory = CommonFactoryFinder.getStyleFactory();
-            URL sldURL = MapImageEJB.class.getResource(resourcesPath + "cert_parcel.xml");
+            URL sldURL = MapImageEJB.class.getResource(RESOURCES_PATH + "cert_parcel.xml");
             SLDParser stylereader;
             stylereader = new SLDParser(styleFactory, sldURL);
             Style sldStyle = stylereader.readXML()[0];
@@ -334,7 +334,7 @@ public class MapImageEJB extends AbstractEJB implements MapImageEJBLocal {
         renderer.paint(grMapImage, mapBounds, extent, map.getViewport().getWorldToScreen());
 
         // Draw north arrow
-        BufferedImage arrow = ImageIO.read(MapImageEJB.class.getResourceAsStream(resourcesPath + "north_arrow.png"));
+        BufferedImage arrow = ImageIO.read(MapImageEJB.class.getResourceAsStream(RESOURCES_PATH + "north_arrow.png"));
         grMapImage.drawImage(arrow, width - arrow.getWidth() - 10, 10, null);
 
         // Draw grid cut

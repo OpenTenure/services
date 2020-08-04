@@ -47,58 +47,62 @@ import org.apache.ibatis.session.SqlSession;
  */
 public class MockSqlSession implements SqlSession {
 
+    private static final String NOT_SUPPORTED_YET = "Not supported yet.";
     private Map<String, Object> mappers = new HashMap<String, Object>();
 
     @Override
     public Object selectOne(String string) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public Object selectOne(String string, Object o) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public List selectList(String string) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public List selectList(String string, Object o) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public List selectList(String string, Object o, RowBounds rb) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public Map selectMap(String string, String string1) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public Map selectMap(String string, Object o, String string1) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public Map selectMap(String string, Object o, String string1, RowBounds rb) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
     public void select(String string, Object o, ResultHandler rh) {
+        // method override
     }
 
     @Override
     public void select(String string, ResultHandler rh) {
+        // method override
     }
 
     @Override
     public void select(String string, Object o, RowBounds rb, ResultHandler rh) {
+        // method override
     }
 
     @Override
@@ -133,31 +137,37 @@ public class MockSqlSession implements SqlSession {
 
     @Override
     public void commit() {
+        // method override
     }
 
     @Override
     public void commit(boolean bln) {
+        // method override
     }
 
     @Override
     public void rollback() {
+        // method override
     }
 
     @Override
     public void rollback(boolean bln) {
+        // method override
     }
 
     @Override
     public void close() {
+        // method override
     }
 
     @Override
     public void clearCache() {
+        // method override
     }
 
     @Override
     public Configuration getConfiguration() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     @Override
@@ -171,12 +181,12 @@ public class MockSqlSession implements SqlSession {
 
     @Override
     public Connection getConnection() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
     
     @Override
    public List<BatchResult> flushStatements() {    
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
 
     public <T, U extends T> void addMapper(Class<T> typeKey, U mockMapper) {

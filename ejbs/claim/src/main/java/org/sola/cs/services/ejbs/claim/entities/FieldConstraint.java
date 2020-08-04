@@ -114,7 +114,4 @@ public class FieldConstraint extends AbstractVersionedEntity {
     public void setFieldConstraintOptionList(List<FieldConstraintOption> fieldConstraintOptionList) {
         this.fieldConstraintOptionList = fieldConstraintOptionList;
     }
-    
-    public FieldConstraint(){
-    }
 }

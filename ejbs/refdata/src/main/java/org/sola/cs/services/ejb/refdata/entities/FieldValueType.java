@@ -11,6 +11,4 @@ public class FieldValueType extends AbstractCodeEntity {
     public static final String TYPE_TEXT = "TEXT";
     public static final String TYPE_NUMBER = "NUMBER";
     
-    public FieldValueType(){
-    }
 }

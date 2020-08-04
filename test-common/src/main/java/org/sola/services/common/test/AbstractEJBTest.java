@@ -73,6 +73,7 @@ public abstract class AbstractEJBTest {
      */
     protected static String GLASSFISH_RESOURCE_NAME = "glassfish";
     private static String configVersion = "v001";
+    private static final String CLASSES = "classes";
     private static EJBContainer container = null;
     private static Map properties = null;
     private static Boolean skipTests = null;
@@ -259,7 +260,7 @@ public abstract class AbstractEJBTest {
      * Obtains a reference to the named EJB class running in the embedded Glassfish container.
      * <p>
      * This method assumes the EJB being requested is in the same jar as the test class and uses
-     * "classes" as the module name. If the "classes" module name results in a NamingException, the
+     * CLASSES as the module name. If the CLASSES module name results in a NamingException, the
      * lookup is retried with the "classesejb" module name. This appears to be the module name used
      * when trying to debug the test. 
      * </p>
@@ -268,7 +269,7 @@ public abstract class AbstractEJBTest {
      * @throws NamingException If the EJB name cannot be found
      */
     protected Object getEJBInstance(String ejbClassName) throws Exception {
-        return getEJBInstance("classes", ejbClassName);
+        return getEJBInstance(CLASSES, ejbClassName);
     }
 
     /**
@@ -294,8 +295,8 @@ public abstract class AbstractEJBTest {
         moduleNames.add(moduleName);
         moduleNames.add("sola-" + ejbClassName.substring(0, (ejbClassName.length() - 3)).toLowerCase());
         moduleNames.add("classesejb");
-        if (!moduleName.equals("classes")) {
-            moduleNames.add("classes");
+        if (!moduleName.equals(CLASSES)) {
+            moduleNames.add(CLASSES);
         }
 
         Object result = null;

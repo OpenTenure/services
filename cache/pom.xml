@@ -4,12 +4,11 @@
     <parent>
         <artifactId>sola-cs-services</artifactId>
         <groupId>org.sola.cs</groupId>
-        <version>1712a</version>
+        <version>2006a</version>
     </parent>
 
     <groupId>org.sola.cs.services</groupId>
     <artifactId>sola-cs-cache</artifactId>
-    <version>1712a</version>
     <packaging>ejb</packaging>
 
     <name>EJB CS Cache</name>

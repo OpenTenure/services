@@ -12,7 +12,4 @@ public class FieldType extends AbstractCodeEntity {
     public static final String TYPE_INTEGER = "INTEGER";
     public static final String TYPE_DECIMAL = "DECIMAL";
     public static final String TYPE_DATE = "DATE";
-    
-    public FieldType(){
-    }
 }

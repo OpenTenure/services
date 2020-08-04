@@ -19,9 +19,6 @@ public class ClaimPermissions {
     boolean canPrintCertificate = true;
     boolean canIssue = false;
     boolean canTransfer = false;
-     
-    public ClaimPermissions(){
-    }
 
     public boolean isCanIssue() {
         return canIssue;

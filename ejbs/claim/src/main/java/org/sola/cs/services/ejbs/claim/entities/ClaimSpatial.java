@@ -31,9 +31,6 @@ public class ClaimSpatial extends AbstractReadOnlyEntity {
     @Column
     private String geom;
 
-    public ClaimSpatial() {
-    }
-
     public String getId() {
         return id;
     }

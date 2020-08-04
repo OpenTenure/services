@@ -41,9 +41,6 @@ public class ApplicationSearchParams extends AbstractReadOnlyEntity {
     private String documentNumber;
     private String documentReference;
 
-    public ApplicationSearchParams() {
-    }
-
     public String getContactPerson() {
         return contactPerson;
     }

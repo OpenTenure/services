@@ -3,6 +3,7 @@ boundary/
 
 # Identifies the subfolders and files to ignore from the 
 # Subfolders to ignore
+.scannerwork/
 target/
 logs/
 wsdl/

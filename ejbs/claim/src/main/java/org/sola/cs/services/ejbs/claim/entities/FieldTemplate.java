@@ -132,7 +132,4 @@ public class FieldTemplate extends AbstractVersionedEntity {
             return options.toArray(new FieldConstraintOption[options.size()]);
         }
     }
-    
-    public FieldTemplate(){
-    }
 }

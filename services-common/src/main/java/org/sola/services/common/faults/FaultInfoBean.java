@@ -50,9 +50,6 @@ public class FaultInfoBean {
     
     private List<ValidationResult> validationResultList;
 
-    public FaultInfoBean() {
-    }
-
     public String getFaultId() {
         return faultId;
     }

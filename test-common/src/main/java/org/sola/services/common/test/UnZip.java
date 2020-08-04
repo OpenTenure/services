@@ -166,14 +166,25 @@ public class UnZip {
                     }
                 }
                 System.err.println("Creating " + zipName);
-                FileOutputStream os = new FileOutputStream(zipName);
-                InputStream is = zippy.getInputStream(e);
-                int n = 0;
-                while ((n = is.read(b)) > 0) {
-                    os.write(b, 0, n);
+                
+                FileOutputStream os=null;
+                InputStream is=null;
+                try {
+                    os = new FileOutputStream(zipName); 
+                    is = zippy.getInputStream(e);
+                        int n = 0;
+                        while ((n = is.read(b)) > 0) {
+                            os.write(b, 0, n);
+                        }
+                } finally {
+                    if (os!=null) {
+                        os.close();
+                    }
+                    if (is!=null) {
+                        is.close();
+                    }
                 }
-                is.close();
-                os.close();
+        
                 break;
             case LIST:
                 // Not extracting, just list

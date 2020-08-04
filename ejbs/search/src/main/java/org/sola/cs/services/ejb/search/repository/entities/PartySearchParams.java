@@ -35,10 +35,6 @@ public class PartySearchParams  extends AbstractReadOnlyEntity {
     private String typeCode;
     private String roleTypeCode;
     private String locale;
-    
-    public PartySearchParams(){
-    
-    }
 
     public String getName() {
         return name;

@@ -62,7 +62,4 @@ public class FieldConstraintOption extends AbstractVersionedEntity {
     public void setItemOrder(int itemOrder) {
         this.itemOrder = itemOrder;
     }
-    
-    public FieldConstraintOption(){
-    }
 }

@@ -67,6 +67,13 @@ public class SearchCSEJBIT extends AbstractEJBTest {
     private static final String LOGIN_USER = "test";
     private static final String LOGIN_PASS = "test";
     
+    private static final String FOUND = "Found ";
+    private static final String RESULT_NOTHING = "Result: nothing returned";
+    private static final String RESULT_FOUND = "Result has found: ";
+    private static final String RESULT_FIRST = "First result: ";
+    private static final String TESTING_QUERY = "Testing query: ";
+    private static final String MAP_SOUTH = "map-south";
+    
     @Before
     public void setUp() throws Exception {
         login(LOGIN_USER, LOGIN_PASS);
@@ -95,7 +102,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
             assertNotNull(result);
 
             if (result != null && result.size() > 0) {
-                System.out.println("Found " + result.size() + " BA units");
+                System.out.println(FOUND + result.size() + " BA units");
             } else {
                 System.out.println("Can't find any BA unit.");
             }
@@ -118,7 +125,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
             assertNotNull(result);
 
             if (result != null && result.size() > 0) {
-                System.out.println("Found " + result.size() + " business rules");
+                System.out.println(FOUND + result.size() + " business rules");
             } else {
                 System.out.println("Can't find any business rules.");
             }
@@ -140,7 +147,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
             assertNotNull(result);
 
             if (result != null && result.size() > 0) {
-                System.out.println("Found " + result.size() + " active users");
+                System.out.println(FOUND + result.size() + " active users");
             } else {
                 System.out.println("Can't find any active user");
             }
@@ -165,7 +172,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
             assertNotNull(result);
 
             if (result != null && result.size() > 0) {
-                System.out.println("Found " + result.size() + " users");
+                System.out.println(FOUND + result.size() + " users");
             } else {
                 System.out.println("Can't find any user");
             }
@@ -199,7 +206,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
             assertNotNull(result);
 
             if (result != null && result.size() > 0) {
-                System.out.println("Found " + result.size() + " sources");
+                System.out.println(FOUND + result.size() + " sources");
             } else {
                 System.out.println("Can't find any source");
             }
@@ -223,7 +230,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
         assertNotNull(result);
 
         if (result != null && result.size() > 0) {
-            System.out.println("Found " + result.size() + " parties");
+            System.out.println(FOUND + result.size() + " parties");
         } else {
             System.out.println("Can't find any parties");
         }
@@ -245,7 +252,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
         if (result != null) {
             System.out.println("ba unit found: " + result.toString());
         } else {
-            System.out.println("Result: nothing returned");
+            System.out.println(RESULT_NOTHING);
         }
     }
 
@@ -265,7 +272,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
         if (result != null) {
             System.out.println("ba unit found: " + result.toString());
         } else {
-            System.out.println("Result: nothing returned");
+            System.out.println(RESULT_NOTHING);
         }
     }
 
@@ -292,7 +299,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
 //                System.out.println("Error:" + ex.getMessage());
 //            }
 //        } else {
-//            System.out.println("Result: nothing returned");
+//            System.out.println(RESULT_NOTHING);
 //        }
     }
 
@@ -323,16 +330,16 @@ public class SearchCSEJBIT extends AbstractEJBTest {
 
     private void testSpatialQuery(SearchCSEJBLocal instance,
             QueryForNavigation spatialQuery, String queryName) throws Exception {
-        System.out.println("Testing query: " + queryName);
+        System.out.println(TESTING_QUERY + queryName);
         spatialQuery.setQueryName(queryName);
         ResultForNavigationInfo result = instance.getSpatialResult(spatialQuery);
         if (result != null) {
-            System.out.println("Result has found: " + result.getToAdd().size());
+            System.out.println(RESULT_FOUND + result.getToAdd().size());
             if (result.getToAdd().size() > 0) {
-                System.out.println("First result: " + result.getToAdd().get(0).toString());
+                System.out.println(RESULT_FIRST + result.getToAdd().get(0).toString());
             }
         } else {
-            System.out.println("Result: nothing returned");
+            System.out.println(RESULT_NOTHING);
         }
     }
 
@@ -348,12 +355,12 @@ public class SearchCSEJBIT extends AbstractEJBTest {
         SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
         List<ConfigMapLayer> result = instance.getConfigMapLayerList("en");
         if (result != null) {
-            System.out.println("Result has found: " + result.size());
+            System.out.println(RESULT_FOUND + result.size());
             if (result.size() > 0) {
-                System.out.println("First result: " + result.get(0).toString());
+                System.out.println(RESULT_FIRST + result.get(0).toString());
             }
         } else {
-            System.out.println("Result: nothing returned");
+            System.out.println(RESULT_NOTHING);
         }
     }
 
@@ -369,12 +376,12 @@ public class SearchCSEJBIT extends AbstractEJBTest {
         SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
         HashMap<String, String> result = instance.getMapSettingList();
         if (result != null) {
-            System.out.println("Result has found: " + result.size());
+            System.out.println(RESULT_FOUND + result.size());
             if (result.size() > 0) {
-                System.out.println("First result: " + result.get("map-srid"));
+                System.out.println(RESULT_FIRST + result.get("map-srid"));
             }
         } else {
-            System.out.println("Result: nothing returned");
+            System.out.println(RESULT_NOTHING);
         }
     }
 
@@ -394,10 +401,10 @@ public class SearchCSEJBIT extends AbstractEJBTest {
         Map params = new HashMap();
         params.put(ResultForSelectionInfo.PARAM_GEOMETRY, this.getGeometry(
                 String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s))",
-                settings.get("map-west"), settings.get("map-south"),
-                settings.get("map-east"), settings.get("map-south"),
+                settings.get("map-west"), settings.get(MAP_SOUTH),
+                settings.get("map-east"), settings.get(MAP_SOUTH),
                 settings.get("map-east"), settings.get("map-north"),
-                settings.get("map-west"), settings.get("map-south"))));
+                settings.get("map-west"), settings.get(MAP_SOUTH))));
         params.put(ResultForSelectionInfo.PARAM_SRID, Integer.parseInt(settings.get("map-srid")));
         this.testDynamicQuery(instance, "dynamic.informationtool.get_parcel", params);
         this.testDynamicQuery(instance, "dynamic.informationtool.get_place_name", params);
@@ -408,15 +415,15 @@ public class SearchCSEJBIT extends AbstractEJBTest {
 
     private void testDynamicQuery(SearchCSEJBLocal instance,
             String queryName, Map params) throws Exception {
-        System.out.println("Testing query: " + queryName);
+        System.out.println(TESTING_QUERY + queryName);
         GenericResult result = instance.getGenericResultList(queryName, params);
         if (result != null) {
-            System.out.println("Result has found: " + result.getValues().size());
+            System.out.println(RESULT_FOUND + result.getValues().size());
             if (result.getValues().size() > 0) {
-                System.out.println("First result: " + result.getValues().get(0).toString());
+                System.out.println(RESULT_FIRST + result.getValues().get(0).toString());
             }
         } else {
-            System.out.println("Result: nothing returned");
+            System.out.println(RESULT_NOTHING);
         }
     }
 
@@ -441,11 +448,11 @@ public class SearchCSEJBIT extends AbstractEJBTest {
 
     private void testQueriesForResultList(
             SearchCSEJBLocal instance, String queryName, Object[] params) throws Exception {
-        System.out.println("Testing query: " + queryName);
+        System.out.println(TESTING_QUERY + queryName);
 //        List result =
 //                instance.getResultList(queryName, params);
 //        if (result != null && result.size() > 0) {
-//            System.out.println("Found " + result.size() + " elements.");
+//            System.out.println(FOUND + result.size() + " elements.");
 //        } else {
 //            System.out.println("Can't find any element.");
 //        }

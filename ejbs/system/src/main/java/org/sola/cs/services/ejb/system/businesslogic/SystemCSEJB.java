@@ -198,7 +198,11 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
                 }
             }
             br.setEntityAction(EntityAction.DELETE);
-            getRepository().saveEntity(br);
+            try {
+                getRepository().saveEntity(br);
+            } catch (Exception e) {
+                return false;
+            }
         }
         return true;
     }

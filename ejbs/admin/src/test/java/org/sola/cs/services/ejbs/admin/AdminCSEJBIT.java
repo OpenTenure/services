@@ -52,6 +52,8 @@ public class AdminCSEJBIT extends AbstractEJBTest {
     public AdminCSEJBIT() {
         super();
     }
+    private static final String FOUND = ">>> Found ";
+    private static final String GROUP_FAILED = "Failed to get group";
     private static final String USER_ID = "tester-user-id";
     private static final String USER_NAME = "tester-user-name";
     private static final String GROUP_ID = "tester-group-id";
@@ -83,7 +85,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             tx.commit();
 
             assertNotNull("List of languages is null.", result);
-            System.out.println(">>> Found " + result.size() + " languages.");
+            System.out.println(FOUND + result.size() + " languages.");
             
         } catch (Exception e) {
             tx.rollback();
@@ -105,7 +107,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             tx.commit();
 
             assertNotNull("List of roles is null.", result);
-            System.out.println(">>> Found " + result.size() + " roles.");
+            System.out.println(FOUND + result.size() + " roles.");
             
         } catch (Exception e) {
             tx.rollback();
@@ -127,7 +129,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             tx.commit();
 
             assertNotNull("List of roles for current user is null.", result);
-            System.out.println(">>> Found " + result.size() + " roles for current user.");
+            System.out.println(FOUND + result.size() + " roles for current user.");
             
         } catch (Exception e) {
             tx.rollback();
@@ -243,7 +245,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             assertNotNull("List of groups is null.", result);
             assertFalse("List of groups is empty.", result.size()<=0);
             
-            System.out.println(">>> Found " + result.size() + " groups.");
+            System.out.println(FOUND + result.size() + " groups.");
         } catch (Exception e) {
             tx.rollback();
             fail(e.getMessage());
@@ -266,7 +268,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             assertNotNull("List of groups summary is null.", result);
             assertFalse("List of groups summary is empty.", result.size()<=0);
             
-            System.out.println(">>> Found " + result.size() + " groups summaries.");
+            System.out.println(FOUND + result.size() + " groups summaries.");
         } catch (Exception e) {
             tx.rollback();
             fail(e.getMessage());
@@ -288,7 +290,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             Group group = instance.getGroup(GROUP_ID);
             tx.commit();
             
-            assertNotNull("Failed to get group", group);
+            assertNotNull(GROUP_FAILED, group);
             
             tx.begin();
             
@@ -352,7 +354,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             tx.commit();
             assertNotNull("Failed to get users", users);
             
-            System.out.println(">>> Found " + users.size() + " users!");
+            System.out.println(FOUND + users.size() + " users!");
             
         } catch (Exception e) {
             tx.rollback();
@@ -377,7 +379,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             }
             tx.commit();
 
-            assertNotNull("Failed to get group", group);
+            assertNotNull(GROUP_FAILED, group);
             assertNotNull("Group name is null", group.getName());
             assertNotNull("Group description is null", group.getDescription());
             assertNotNull("Group roles is null", group.getGroupRoles());
@@ -433,7 +435,7 @@ public class AdminCSEJBIT extends AbstractEJBTest {
             Group group = instance.getGroup(GROUP_ID);
             tx.commit();
 
-            assertNotNull("Failed to get group", group);
+            assertNotNull(GROUP_FAILED, group);
 
             group.setEntityAction(EntityAction.DELETE);
             

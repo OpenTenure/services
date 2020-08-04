@@ -4,12 +4,11 @@
     <parent>
         <artifactId>sola-cs-main</artifactId>
         <groupId>org.sola.cs</groupId>
-        <version>1712a</version>
+        <version>2006a</version>
     </parent>
     <groupId>org.sola.cs</groupId>
     <artifactId>sola-cs-services</artifactId>
     <packaging>pom</packaging>
-    <version>1712a</version>
     <name>Services CS POM</name>
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>

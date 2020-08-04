@@ -116,9 +116,6 @@ public class FieldPayload extends AbstractVersionedEntity {
         this.itemOrder = itemOrder;
     }
     
-    public FieldPayload(){
-    }
-    
     public void validate(FieldTemplate fTempl) throws Exception {
         if (fTempl.getFieldConstraintList() == null || StringUtility.isEmpty(fTempl.getFieldType())) {
             return;

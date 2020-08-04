@@ -50,7 +50,4 @@ public class FormPayload extends AbstractVersionedEntity {
     public void setSectionPayloadList(List<SectionPayload> sectionPayloadList) {
         this.sectionPayloadList = sectionPayloadList;
     }
-    
-    public FormPayload(){
-    }
 }

@@ -112,7 +112,4 @@ public class SectionPayload extends AbstractVersionedEntity {
     public void setItemOrder(int itemOrder) {
         this.itemOrder = itemOrder;
     }
-    
-    public SectionPayload(){
-    }
 }
