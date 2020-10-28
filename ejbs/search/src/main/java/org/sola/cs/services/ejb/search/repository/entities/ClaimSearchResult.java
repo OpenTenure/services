@@ -41,6 +41,7 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
     public static final String PARAM_CLAIM_NUMBER = "claimNumber";
     public static final String PARAM_DESCRIPTION = "claimDescription";
     public static final String PARAM_STATUS_CODE = "statusCode";
+    public static final String PARAM_CHALLENGE_TYPE = "challengeType";
     public static final String PARAM_DATE_FROM = "dateFrom";
     public static final String PARAM_DATE_TO = "dateTo";
     public static final String PARAM_RECORDER = "recorderName";
@@ -82,6 +83,9 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
             + "(c.status_code = #{" + PARAM_STATUS_CODE + "} or #{" + PARAM_STATUS_CODE + "} = '') and \n"
             + "((c.lodgement_date between #{" + PARAM_DATE_FROM + "}::timestamp and #{" + PARAM_DATE_TO + "}::timestamp) \n"
             + "  or #{" + PARAM_DATE_FROM + "}::timestamp is null or #{" + PARAM_DATE_TO + "}::timestamp is null) and "
+            + " ((#{" + PARAM_CHALLENGE_TYPE + "} = 'challenging' and c.challenged_claim_id is not null) or ("
+            + "#{" + PARAM_CHALLENGE_TYPE + "} = 'challenged' and c.id in (select challenged_claim_id from opentenure.claim)) or "
+            + "#{" + PARAM_CHALLENGE_TYPE + "} = '') and "
             + "(c.recorder_name = #{" + PARAM_RECORDER + "} or #{" + PARAM_SEARCH_BY_USER + "} = 'f') and "
             + "(c.status_code != 'created' or c.recorder_name = #{" + PARAM_RECORDER + "})"
             + "order by c.lodgement_date desc, c.nr desc limit 100;";

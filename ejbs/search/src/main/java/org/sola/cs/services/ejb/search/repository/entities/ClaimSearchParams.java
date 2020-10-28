@@ -10,6 +10,7 @@ public class ClaimSearchParams extends AbstractReadOnlyEntity {
     String statusCode;
     String languageCode;
     boolean searchByUser = false;
+    String challengeType;
     String claimNumber;
     Date lodgementDateFrom;
     Date lodgementDateTo;
@@ -80,5 +81,13 @@ public class ClaimSearchParams extends AbstractReadOnlyEntity {
 
     public void setLanguageCode(String languageCode) {
         this.languageCode = languageCode;
+    }
+
+    public String getChallengeType() {
+        return challengeType;
+    }
+
+    public void setChallengeType(String challengeType) {
+        this.challengeType = challengeType;
     }
 }

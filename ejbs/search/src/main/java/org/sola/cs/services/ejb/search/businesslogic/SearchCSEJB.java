@@ -1025,6 +1025,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         searchParams.setDescription(StringUtility.empty(searchParams.getDescription()));
         searchParams.setClaimNumber(StringUtility.empty(searchParams.getClaimNumber()));
         searchParams.setClaimantName(StringUtility.empty(searchParams.getClaimantName()));
+        searchParams.setChallengeType(StringUtility.empty(searchParams.getChallengeType()));
         searchParams.setStatusCode(StringUtility.empty(searchParams.getStatusCode()));
         searchParams.setLanguageCode(StringUtility.empty(searchParams.getLanguageCode()));
 
@@ -1039,6 +1040,7 @@ public class SearchCSEJB extends AbstractEJB implements SearchCSEJBLocal {
         params.put(ClaimSearchResult.PARAM_SEARCH_BY_USER, searchParams.isSearchByUser());
         params.put(ClaimSearchResult.PARAM_RECORDER, getUserName());
         params.put(ClaimSearchResult.PARAM_STATUS_CODE, searchParams.getStatusCode());
+        params.put(ClaimSearchResult.PARAM_CHALLENGE_TYPE, searchParams.getChallengeType());
 
         return getRepository().getEntityList(ClaimSearchResult.class, params);
     }

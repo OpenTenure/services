@@ -421,8 +421,40 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
         }
 
+        // If new claim and claimant also appears as one of the owners, make then sa same object
+        if(newClaim){
+            if(claim.getShares() != null && claim.getClaimant() != null){
+                for(ClaimShare share: claim.getShares()){
+                    if(share.getOwners()!= null){
+                        for(ClaimParty owner: share.getOwners()){
+                            if(owner.getId().equals(claim.getClaimant().getId())){
+                                claim.setClaimant(owner);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Rest claimant and owners ids to make sure the claim is not using existing party id
+            // Reset owners first 
+            if(claim.getShares() != null){
+                for(ClaimShare share: claim.getShares()){
+                    if(share.getOwners()!= null){
+                        for(ClaimParty owner: share.getOwners()){
+                            owner.setId(UUID.randomUUID().toString());
+                        }
+                    }
+                }
+            }
+            
+            // Reset claimant
+            if(claim.getClaimant() != null){
+                claim.getClaimant().setId(UUID.randomUUID().toString());
+            }
+        }
+        
         // check if claimant is new (insert) or not (swap for reference)
-        ClaimParty claimant = getRepository().getEntity(ClaimParty.class, claim.getClaimantId());
+        /*ClaimParty claimant = getRepository().getEntity(ClaimParty.class, claim.getClaimantId());
         if (claimant != null) {
             claim.setClaimant(claimant);
         }
@@ -436,7 +468,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                     share.getOwners().set(i, owner);
                 }
             }
-        }
+        }*/
         
         // Save claim
         claim = getRepository().saveEntity(claim);
