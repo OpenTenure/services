@@ -16,6 +16,7 @@ import org.sola.common.ConfigConstants;
 import org.sola.common.DateUtility;
 import org.sola.common.DynamicFormException;
 import org.sola.common.EmailVariables;
+import org.sola.common.FileUtility;
 import org.sola.common.RolesConstants;
 import org.sola.common.SOLAException;
 import org.sola.common.SOLAMD5Exception;
@@ -435,7 +436,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 }
             }
             
-            // Rest claimant and owners ids to make sure the claim is not using existing party id
+            // Reset claimant and owners ids to make sure the claim is not using existing party id
             // Reset owners first 
             if(claim.getShares() != null){
                 for(ClaimShare share: claim.getShares()){
@@ -1050,7 +1051,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     public List<SourceType> getDocumentTypesForIssuance(String langaugeCode) {
         String docTypesString = systemEjb.getSetting(ConfigConstants.DOCUMENTS_FOR_ISSUING_CERT, "");
         List<SourceType> docTypes = new ArrayList<SourceType>();
-
+       
         if (!StringUtility.isEmpty(docTypesString)) {
             String[] docTypeCodes = docTypesString.replace(" ", "").split(",");
             if (docTypeCodes != null && docTypeCodes.length > 0) {
@@ -2408,11 +2409,12 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
-        // Check claim status and ownership
-        if (canIssueClaim(claim, throwException)) {
+        // Check claim to be moderated
+        if (claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED) && 
+                isInRole(RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)) {
             return true;
         }
-
+        
         if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)
                 || !StringUtility.empty(claim.getRecorderName()).equalsIgnoreCase(getUserName())) {
             if (throwException) {
@@ -2556,7 +2558,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         permissions.setCanUnAssign(canUnAssignClaim(claim, false));
         permissions.setCanWithdraw(canWithdrawClaim(claim, false));
         permissions.setCanDelete(canDeleteClaim(claim, false));
-        permissions.setCanAddDocumentsToClaim(canAddDocumentsToClaim(claim, false));
+        permissions.setCanAddDocumentsToClaim(canAddDocumentsToClaim(claim, false) && canIssueClaim(claim, false));
         permissions.setCanSubmitClaim(canSubmitClaim(claim, false));
         permissions.setCanChallengeClaim(canChallengeClaim(claim, false));
         permissions.setCanRevert(canRevertClaimReview(claim, false));

@@ -33,6 +33,7 @@ package org.sola.services.common.contracts;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
+
 /**
  *
  * @author soladev
