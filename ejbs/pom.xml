@@ -4,7 +4,7 @@
     <parent>
         <artifactId>sola-cs-services</artifactId>
         <groupId>org.sola.cs</groupId>
-        <version>2020a</version>
+        <version>2024a</version>
     </parent>
     <groupId>org.sola.cs.services</groupId>
     <artifactId>sola-cs-ejbs</artifactId>
@@ -31,9 +31,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <version>6.0</version>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>10.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -105,19 +105,19 @@
                         <version>2.3.2</version>
                         <configuration>
                             <!-- javaee6 contains upgrades of APIs contained within the JDK itself.
-                                 As such these need to be placed on the bootclasspath, rather than classpath of the
-                                 compiler.
-                                 If you don't make use of these new updated API, you can delete the profile.
-                                 On non-SUN jdk, you will need to create a similar profile for your jdk, with the similar property as sun.boot.class.path in Sun's JDK.-->
+                            As such these need to be placed on the bootclasspath, rather than classpath of the
+                            compiler.
+                            If you don't make use of these new updated API, you can delete the profile.
+                            On non-SUN jdk, you will need to create a similar profile for your jdk, with the similar property as sun.boot.class.path in Sun's JDK.-->
                             <compilerArguments>
                                 <bootclasspath>${settings.localRepository}/javax/javaee-endorsed-api/6.0/javaee-endorsed-api-6.0.jar${path.separator}${sun.boot.class.path}</bootclasspath>
                             </compilerArguments>
                         </configuration>
                         <dependencies>
                             <dependency>
-                                <groupId>javax</groupId>
-                                <artifactId>javaee-endorsed-api</artifactId>
-                                <version>6.0</version>
+                                <groupId>jakarta.platform</groupId>
+                                <artifactId>jakarta.jakartaee-api</artifactId>
+                                <version>10.0.0</version>
                             </dependency>
                         </dependencies>
                     </plugin>

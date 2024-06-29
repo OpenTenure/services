@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-    <artifactId>sola-cs-ejbs</artifactId>
-    <groupId>org.sola.cs.services</groupId>
-    <version>2020a</version>
-  </parent>
+        <artifactId>sola-cs-ejbs</artifactId>
+        <groupId>org.sola.cs.services</groupId>
+        <version>2024a</version>
+    </parent>
 
     <groupId>org.sola.cs.services.ejbs</groupId>
     <artifactId>sola-cs-refdata</artifactId>
@@ -20,9 +20,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <version>7.0</version>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>10.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -64,9 +64,9 @@
                             <silent>true</silent>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>javax</groupId>
-                                    <artifactId>javaee-endorsed-api</artifactId>
-                                    <version>7.0</version>
+                                    <groupId>jakarta.platform</groupId>
+                                    <artifactId>jakarta.jakartaee-api</artifactId>
+                                    <version>10.0.0</version>
                                     <type>jar</type>
                                 </artifactItem>
                             </artifactItems>

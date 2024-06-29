@@ -1,6 +1,6 @@
 package org.sola.cs.services.ejb.search.repository.entities;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 
@@ -22,6 +22,7 @@ public class PublicDisplaySearchResult extends AbstractReadOnlyEntity {
     private String landUse;
 
     public static final String PARAM_BOUNDARY_ID = "boundaryId";
+    public static final String PARAM_PROJECT_ID = "projectId";
 
     private static final String SELECT_PART
             = "select c.id, c.nr, c.claim_area, p.name || ' ' || coalesce(p.last_name, '') as owner_name, sh.percentage, get_translation(l.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as land_use, c.status_code \n"
@@ -30,7 +31,7 @@ public class PublicDisplaySearchResult extends AbstractReadOnlyEntity {
             + "  on c.id = sh.claim_id) left join cadastre.land_use_type l on c.land_use_code = l.code \n";
 
     public static final String QUERY_SEARCH_BY_BOUNDARY = SELECT_PART
-            + "where c.status_code NOT IN ('rejected','withdrawn','created') and ('' = #{" + PARAM_BOUNDARY_ID + "} or c.boundary_id in "
+            + "where c.project_id = #{" + PARAM_PROJECT_ID + "} and c.status_code NOT IN ('rejected','withdrawn','created') and ('' = #{" + PARAM_BOUNDARY_ID + "} or c.boundary_id in "
             + "(WITH RECURSIVE all_administrative_boundaries AS ( \n"
             + "        SELECT id, parent_id \n"
             + "        FROM opentenure.administrative_boundary \n"

@@ -4,7 +4,7 @@
     <parent>
         <artifactId>sola-cs-main</artifactId>
         <groupId>org.sola.cs</groupId>
-        <version>2020a</version>
+        <version>2024a</version>
     </parent>
     <groupId>org.sola.cs</groupId>
     <artifactId>sola-cs-services</artifactId>

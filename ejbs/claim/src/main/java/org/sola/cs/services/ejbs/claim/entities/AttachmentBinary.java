@@ -1,7 +1,7 @@
 package org.sola.cs.services.ejbs.claim.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Table;
 
 @Table(schema = "opentenure", name = "attachment")
 public class AttachmentBinary extends Attachment {

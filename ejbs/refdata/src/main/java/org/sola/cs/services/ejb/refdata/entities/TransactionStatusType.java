@@ -31,7 +31,7 @@
  */
 package org.sola.cs.services.ejb.refdata.entities;
 
-import javax.persistence.Table;
+import jakarta.persistence.Table;
 import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.entities.AbstractCodeEntity;
 

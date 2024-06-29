@@ -14,6 +14,7 @@ public class ClaimSearchParams extends AbstractReadOnlyEntity {
     String claimNumber;
     Date lodgementDateFrom;
     Date lodgementDateTo;
+    String projectId;
     
     public ClaimSearchParams(){
         super();
@@ -89,5 +90,13 @@ public class ClaimSearchParams extends AbstractReadOnlyEntity {
 
     public void setChallengeType(String challengeType) {
         this.challengeType = challengeType;
+   }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 }

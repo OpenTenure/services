@@ -33,8 +33,8 @@
 package org.sola.cs.services.ejb.system;
 
 import java.util.Calendar;
-import javax.transaction.Status;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Status;
+import jakarta.transaction.UserTransaction;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;

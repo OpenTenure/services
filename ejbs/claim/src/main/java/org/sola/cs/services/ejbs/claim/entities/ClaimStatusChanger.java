@@ -1,9 +1,9 @@
 package org.sola.cs.services.ejbs.claim.entities;
 
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.sola.services.common.repository.entities.AbstractEntity;
 
 @Table(schema = "opentenure", name = "claim")
@@ -45,6 +45,9 @@ public class ClaimStatusChanger extends AbstractEntity {
     
     @Column(name = "terminate_transaction")
     private String terminateTransaction;
+    
+    @Column(name = "project_id", insertable = false, updatable = false)
+    private String projectId;
     
     public ClaimStatusChanger() {
         super();
@@ -144,5 +147,13 @@ public class ClaimStatusChanger extends AbstractEntity {
 
     public void setTerminateTransaction(String terminateTransaction) {
         this.terminateTransaction = terminateTransaction;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 }

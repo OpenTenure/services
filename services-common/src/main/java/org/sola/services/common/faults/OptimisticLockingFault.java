@@ -32,7 +32,7 @@
 
 package org.sola.services.common.faults;
 
-import javax.xml.ws.WebFault;
+import jakarta.xml.ws.WebFault;
 
 /**
  * OptimisticLockingFault is raised by the the SOLA web services if an

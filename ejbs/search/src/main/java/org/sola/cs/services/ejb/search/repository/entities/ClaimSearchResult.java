@@ -1,7 +1,7 @@
 package org.sola.cs.services.ejb.search.repository.entities;
 
 import java.util.Date;
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 
@@ -35,9 +35,13 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
     private int version;
     @Column(name = "geom")
     private String geom;
+    @Column(name = "project_id")
+    private String projectId;
     
+    public static final String PARAM_ID = "claim_id";
     public static final String PARAM_NAME = "claimantName";
     public static final String PARAM_USERNAME = "userName";
+    public static final String PARAM_PROJECT_ID = "projectId";
     public static final String PARAM_CLAIM_NUMBER = "claimNumber";
     public static final String PARAM_DESCRIPTION = "claimDescription";
     public static final String PARAM_STATUS_CODE = "statusCode";
@@ -48,7 +52,7 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
     public static final String PARAM_SEARCH_BY_USER = "searchByUser";
     public static final String PARAM_POINT = "pointParam";
     private static final String SELECT_PART = 
-            "select c.id, c.nr, c.lodgement_date, c.claim_area, c.challenge_expiry_date, c.decision_date, c.description, \n"
+            "select c.id, c.nr, c.lodgement_date, c.project_id, c.claim_area, c.challenge_expiry_date, c.decision_date, c.description, \n"
             + "ST_AsText(c.mapped_geometry) as geom, "
             + "c.claimant_id, (p.name || ' ' || coalesce(p.last_name, '')) as claimant_name,\n"
             + "c.challenged_claim_id, c.status_code, c.rowversion, get_translation(cs.display_value, #{" 
@@ -59,22 +63,38 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
             + "\n";
     
     public static final String QUERY_SEARCH_BY_POINT = SELECT_PART
-            + "WHERE ST_Contains(c.mapped_geometry, ST_GeomFromText(#{" + PARAM_POINT + "}, St_SRID(c.mapped_geometry))) AND c.status_code NOT IN ('rejected','withdrawn','created')";
+            + "WHERE ST_Contains(c.mapped_geometry, ST_GeomFromText(#{" + PARAM_POINT + "}, St_SRID(c.mapped_geometry))) "
+            + "AND c.project_id = #{" + PARAM_PROJECT_ID + "} "
+            + "AND c.status_code NOT IN ('rejected','withdrawn','created')";
+    
+    public static final String QUERY_SEARCH_BY_ID = SELECT_PART
+            + "WHERE c.id = #{" + PARAM_ID + "}";
     
     public static final String QUERY_SEARCH_ASSIGNED_TO_USER = SELECT_PART
-            + "WHERE c.assignee_name = #{" + PARAM_USERNAME + "} AND c.status_code IN ('reviewed','unmoderated') order by c.lodgement_date desc limit 100;";
+            + "WHERE c.assignee_name = #{" + PARAM_USERNAME + "} "
+            + "AND c.project_id = #{" + PARAM_PROJECT_ID + "} "
+            + "AND c.status_code IN ('reviewed','unmoderated') "
+            + "order by c.lodgement_date desc limit 100;";
     
     public static final String QUERY_SEARCH_FOR_REVIEW = SELECT_PART
-            + "WHERE c.assignee_name is null AND c.status_code = 'unmoderated' and c.challenge_expiry_date <= now() order by c.lodgement_date desc limit 100;";
+            + "WHERE c.assignee_name is null AND c.status_code = 'unmoderated' "
+            + "AND c.project_id = #{" + PARAM_PROJECT_ID + "} "
+            + "and c.challenge_expiry_date <= now() order by c.lodgement_date desc limit 100;";
     
     public static final String QUERY_SEARCH_FOR_REVIEW_ALL = SELECT_PART
-            + "WHERE c.status_code = 'unmoderated' and c.challenge_expiry_date <= now() order by c.lodgement_date desc limit 100;";
+            + "WHERE c.status_code = 'unmoderated' and c.challenge_expiry_date <= now() "
+            + "AND c.project_id = #{" + PARAM_PROJECT_ID + "} "
+            + "order by c.lodgement_date desc limit 100;";
     
     public static final String QUERY_SEARCH_FOR_MODERATION = SELECT_PART
-            + "WHERE c.assignee_name is null AND c.status_code = 'reviewed' order by c.lodgement_date desc limit 100;";
+            + "WHERE c.assignee_name is null AND c.status_code = 'reviewed' "
+            + "AND c.project_id = #{" + PARAM_PROJECT_ID + "} "
+            + "order by c.lodgement_date desc limit 100;";
     
     public static final String QUERY_SEARCH_FOR_MODERATION_ALL = SELECT_PART
-            + "WHERE c.status_code = 'reviewed' order by c.lodgement_date desc limit 100;";
+            + "WHERE c.status_code = 'reviewed' "
+            + "AND c.project_id = #{" + PARAM_PROJECT_ID + "} "
+            + "order by c.lodgement_date desc limit 100;";
     
     public static final String QUERY_SEARCH = SELECT_PART
             + "where position(lower(#{" + PARAM_NAME + "}) in lower(p.name || ' ' || COALESCE(p.last_name, ''))) > 0 and\n"
@@ -87,7 +107,8 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
             + "#{" + PARAM_CHALLENGE_TYPE + "} = 'challenged' and c.id in (select challenged_claim_id from opentenure.claim)) or "
             + "#{" + PARAM_CHALLENGE_TYPE + "} = '') and "
             + "(c.recorder_name = #{" + PARAM_RECORDER + "} or #{" + PARAM_SEARCH_BY_USER + "} = 'f') and "
-            + "(c.status_code != 'created' or c.recorder_name = #{" + PARAM_RECORDER + "})"
+            + "(c.status_code != 'created' or c.recorder_name = #{" + PARAM_RECORDER + "}) and "
+            + "c.project_id = #{" + PARAM_PROJECT_ID + "} "
             + "order by c.lodgement_date desc, c.nr desc limit 100;";
 
     public ClaimSearchResult() {
@@ -204,5 +225,13 @@ public class ClaimSearchResult extends AbstractReadOnlyEntity {
 
     public void setGeom(String geom) {
         this.geom = geom;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 }

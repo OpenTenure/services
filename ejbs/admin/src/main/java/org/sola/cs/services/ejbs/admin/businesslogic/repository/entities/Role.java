@@ -29,8 +29,8 @@
  */
 package org.sola.cs.services.ejbs.admin.businesslogic.repository.entities;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Table;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Table;
 import org.sola.services.common.repository.DefaultSorter;
 import org.sola.services.common.repository.entities.AbstractCodeEntity;
 

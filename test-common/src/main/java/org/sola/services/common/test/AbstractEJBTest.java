@@ -27,6 +27,7 @@
  */
 package org.sola.services.common.test;
 
+//import com.sun.enterprise.security.ee.authentication.ProgrammaticLogin;
 import com.sun.appserv.security.ProgrammaticLogin;
 import java.io.File;
 import java.util.ArrayList;
@@ -34,9 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import javax.ejb.embeddable.EJBContainer;
+import jakarta.ejb.embeddable.EJBContainer;
 import javax.naming.NamingException;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.UserTransaction;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -389,26 +390,30 @@ public abstract class AbstractEJBTest {
     /** 
      * @BeforeClass test method that creates the embedded Glassfish container
      * @throws Exception 
+     * @deprecated 
      */
+    // TODO: Switch on GlassFish 7.0.13
     @BeforeClass
     public static void setUpClass() throws Exception {
-        if (skipIntegrationTest()) {
+        /*if (skipIntegrationTest()) {
             System.out.println("Skipping GF Tests as SOLA_OPTS.SkipGFTests environment "
                     + "variable is set.");
         } else {
             System.out.println("Current User Directory = " + System.getProperty("user.dir"));
             setContainer(createContainer());
-        }
+        }*/
     }
 
     /**
      * @AfterClass test method that closes the embedded Glassfish
      * @throws Exception 
+     * @deprecated 
      */
+    // TODO: Switch on GlassFish 7.0.13
     @AfterClass
     public static void tearDownClass() throws Exception {
-        if (getContainer() != null) {
+        /*if (getContainer() != null) {
             getContainer().close();
-        }
+        }*/
     }
 }

@@ -7,6 +7,7 @@ public class ClaimSpatialSearchParams extends AbstractReadOnlyEntity {
     String minY;
     String maxX;
     String maxY;
+    String projectId;
     int limit;
     
     public ClaimSpatialSearchParams(){
@@ -43,6 +44,14 @@ public class ClaimSpatialSearchParams extends AbstractReadOnlyEntity {
 
     public void setMaxY(String maxY) {
         this.maxY = maxY;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     public int getLimit() {

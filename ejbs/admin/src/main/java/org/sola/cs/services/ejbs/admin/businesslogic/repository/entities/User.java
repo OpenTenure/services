@@ -31,9 +31,9 @@ package org.sola.cs.services.ejbs.admin.businesslogic.repository.entities;
 
 import java.util.Date;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.sola.services.common.repository.AccessFunctions;
 import org.sola.services.common.repository.ChildEntityList;
 import org.sola.services.common.repository.DefaultSorter;
@@ -88,6 +88,8 @@ public class User extends AbstractVersionedEntity {
     private Integer pwordExpiryDays;
     @Column(name = "activation_expiration")
     Date activationExpiration;
+    @ChildEntityList(parentIdField = "userId")
+    private List<UserProject> projects;
 
     public String getPassword() {
         return password;
@@ -224,5 +226,13 @@ public class User extends AbstractVersionedEntity {
 
     public void setActivationExpiration(Date activationExpiration) {
         this.activationExpiration = activationExpiration;
+    }
+
+    public List<UserProject> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(List<UserProject> projects) {
+        this.projects = projects;
     }
 }

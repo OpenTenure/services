@@ -131,12 +131,6 @@ public interface AdminCSEJBLocal extends AbstractEJBLocal {
     User getCurrentUser();
 
     /**
-     * See {@linkplain org.sola.services.ejbs.admin.businesslogic.AdminEJB#saveUser(org.sola.services.ejbs.admin.businesslogic.repository.entities.User)
-     * AdminEJB.saveUser}
-     */
-    User saveUser(User user);
-
-    /**
      * See {@linkplain org.sola.services.ejbs.admin.businesslogic.AdminEJB#getUserFullName(java.lang.String)
      */
     String getUserFullName(String userName);
@@ -149,7 +143,7 @@ public interface AdminCSEJBLocal extends AbstractEJBLocal {
 
     /**
      * See {@linkplain org.sola.services.ejbs.admin.businesslogic.AdminEJB#createCommunityRecorderUser(org.sola.services.ejbs.admin.businesslogic.repository.entities.User)
-     * AdminEJB.createCommunityUser}
+     * AdminCSEJB.createCommunityUser}
      */
     User createCommunityUser(User user);
 
@@ -208,18 +202,6 @@ public interface AdminCSEJBLocal extends AbstractEJBLocal {
     Group getGroup(String groupId);
 
     /**
-     * See {@linkplain org.sola.services.ejbs.admin.businesslogic.AdminEJB#saveGroup(org.sola.services.ejbs.admin.businesslogic.repository.entities.Group)
-     * AdminEJB.saveGroup}
-     */
-    Group saveGroup(Group group);
-
-    /**
-     * See {@linkplain org.sola.services.ejbs.admin.businesslogic.AdminEJB#saveRole(org.sola.services.ejbs.admin.businesslogic.repository.entities.Role)
-     * AdminEJB.saveRole}
-     */
-    Role saveRole(Role role);
-
-    /**
      * See {@linkplain org.sola.services.ejbs.admin.businesslogic.AdminEJB#isUserAdmin()
      * AdminEJB.isUserAdmin}
      */
@@ -232,21 +214,9 @@ public interface AdminCSEJBLocal extends AbstractEJBLocal {
     List<Language> getLanguages(String lang);
 
     /**
-     * See {@linkplain AdminEJB#consolidationExtract(boolean, boolean, boolean)
-     * AdminEJB.consolidationExtract}
+     * See {@linkplain AdminCSEJB#restoreUserPassword(String, String)}
      */
-    String consolidationExtract(boolean generateConsolidationSchema, boolean everything, boolean dumpToFile);
-
-    /**
-     * See {@linkplain AdminEJB#consolidationConsolidate(String, boolean)
-     * AdminEJB.consolidationConsolidate}
-     */
-    String consolidationConsolidate(String extractedFile, boolean mergeConsolidationSchema);
-
-    /**
-     * See {@linkplain AdminEJB#restoreUserPassword(String)}
-     */
-    void restoreUserPassword(String email);
+    void restoreUserPassword(String email, String projectId);
 
     /**
      * See {@linkplain AdminEJB#getUserByActivationCode(String)}
@@ -257,48 +227,6 @@ public interface AdminCSEJBLocal extends AbstractEJBLocal {
      * See {@linkplain AdminEJB#getUserInfo(String)}
      */
     User getUserInfo(String userName);
-
-    /**
-     * See {@linkplain AdminEJB#startProcessProgressUsingBr(String, int)
-     * AdminEJB.startProcessProgressUsingBr}
-     */
-    void startProcessProgress(String processName, int maximumValue);
-
-    /**
-     * See {@linkplain AdminEJB#startProcessProgressUsingBr(String, String)
-     * AdminEJB.startProcessProgressUsingBr}
-     */
-    void startProcessProgressUsingBr(String processName, String brNameToGenerateMaximumValue);
-
-    /**
-     * See {@linkplain AdminEJB#getProcessProgress(String, boolean)
-     * AdminEJB.getProcessProgress}
-     */
-    int getProcessProgress(String processName, boolean inPercentage);
-
-    /**
-     * See {@linkplain AdminEJB#setProcessProgress(String, int)
-     * AdminEJB.setProcessProgress}
-     */
-    void setProcessProgress(String processName, int progressValue);
-
-    /**
-     * See {@linkplain AdminEJB#getProcessLog(String)
-     * AdminEJB.getProcessLog}
-     */
-    String getProcessLog(String processName);
-
-    /**
-     * See {@linkplain AdminEJB#saveSecurityClassifications(java.util.List, org.sola.services.common.EntityTable,
-     * java.lang.String, java.lang.String) saveSecurityClassifications}
-     *
-     * @param entityIds
-     * @param entityTable
-     * @param classificationCode
-     * @param redactCode
-     */
-    void saveSecurityClassifications(List<String> entityIds, EntityTable entityTable,
-            String classificationCode, String redactCode);
 
     /**
      * See {@linkplain AdminEJB#flushCache()}

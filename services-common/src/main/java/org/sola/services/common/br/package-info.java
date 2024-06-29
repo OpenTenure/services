@@ -32,6 +32,6 @@
 @XmlSchema(namespace=ServiceConstants.BASE_TO_NAMESPACE)
 package org.sola.services.common.br;
 
-import javax.xml.bind.annotation.XmlSchema;
+import jakarta.xml.bind.annotation.XmlSchema;
 import org.sola.services.common.ServiceConstants;
 

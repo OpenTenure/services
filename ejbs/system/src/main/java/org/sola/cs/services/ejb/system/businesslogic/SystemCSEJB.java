@@ -40,19 +40,19 @@ import org.sola.cs.services.ejb.system.repository.entities.Query;
 import org.sola.cs.services.ejb.system.repository.entities.Crs;
 import org.sola.cs.services.ejb.system.repository.entities.BrCurrent;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import org.sola.common.ConfigConstants;
 import org.sola.common.RolesConstants;
 import org.sola.common.SOLAException;
 import org.sola.common.StringUtility;
+import org.sola.common.mapping.MappingManager;
 import org.sola.cs.common.messaging.ServiceMessage;
 import org.sola.services.common.EntityAction;
 import org.sola.services.common.br.ValidationResult;
@@ -60,6 +60,9 @@ import org.sola.services.common.ejbs.AbstractEJB;
 import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.cs.services.ejb.search.businesslogic.SearchCSEJBLocal;
 import org.sola.cs.services.ejb.system.br.Result;
+import org.sola.cs.services.ejb.system.repository.entities.Project;
+import org.sola.cs.services.ejb.system.repository.entities.ProjectSetting;
+import org.sola.cs.services.ejb.system.repository.entities.ReportDescription;
 
 /**
  * System EJB - Provides access to SOLA System data including business rules
@@ -89,21 +92,6 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
     }
 
     /**
-     * Returns the tax rate applicable for financial calculations.
-     */
-    @Override
-    public BigDecimal getTaxRate() {
-        // Note that the String constructor is perferred for BigDecimal
-        BigDecimal taxRate = new BigDecimal("0.075");
-        String taxRateStr = getSetting(ConfigConstants.TAX_RATE, taxRate.toString());
-        try {
-            taxRate = new BigDecimal(taxRateStr);
-        } catch (NumberFormatException ex) {
-        }
-        return taxRate;
-    }
-
-    /**
      * Returns all configuration settings in the system.setting table.
      */
     @Override
@@ -120,38 +108,58 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Retrieves the value for the named setting. Constants for each setting are
-     * available in {@linkplain  ConfigConstants}. If the setting does not exist,
-     * the default value for the setting is returned.
+     * available in {@linkplain ConfigConstants}. If the setting does not exist,
+     * the default value for the setting is returned. If project overrides the
+     * settings, project related value will be returned.
      *
      * @param name The name of the setting to retrieve
+     * @param projectId Project ID
      * @param defaultValue The default value for the setting if it no override
      * value is recorded in the system.settings table.
      * @return The override value for the setting or the defaultValue.
      */
     @Override
-    public String getSetting(String name, String defaultValue) {
+    public String getSetting(String name, String projectId, String defaultValue) {
         String result = defaultValue;
-        Setting config = getSetting(name);
+        Setting config = getSetting(name, projectId);
         if (config != null && config.getValue() != null) {
             result = config.getValue();
         }
         return result;
     }
-
+    
     @Override
-    public Setting getSetting(String name) {
-        Setting result = null;
+    public Setting getSetting(String name, String projectId) {
         // Use getAllSettings to obtain the cached settings. 
         List<Setting> settings = getAllSettings();
+        List<ProjectSetting> projectSettings = getAllProjectsSettings();
         for (Setting config : settings) {
             if (config.getName().equals(name) && config.isActive()) {
-                result = config;
-                break;
+                // Check if project has overriden setting
+                if (!StringUtility.isEmpty(projectId)) {
+                    for (ProjectSetting pSetting : projectSettings) {
+                        if (pSetting.getProjectId().equalsIgnoreCase(projectId) && pSetting.getName().equals(name)) {
+                            config = MappingManager.getMapper().map(config, Setting.class);
+                            config.setValue(pSetting.getValue());
+                            return config;
+                        }
+                    }
+                }
+                return config;
             }
         }
-        return result;
+        return null;
     }
 
+    /**
+     * Returns all configuration settings in for all projects.
+     * @return 
+     */
+    public List<ProjectSetting> getAllProjectsSettings() {
+        // NOTE: Will return settings from the cache by default. 
+        return getRepository().getEntityList(ProjectSetting.class);
+    }
+    
     /**
      * Returns the SOLA business rule matching the id.
      *
@@ -595,10 +603,11 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Returns true if email service is enabled on the system, otherwise false.
+     * @param projectId
      */
     @Override
-    public boolean isEmailServiceEnabled() {
-        return getSetting(ConfigConstants.EMAIL_ENABLE_SERVICE, "0").equals("1");
+    public boolean isEmailServiceEnabled(String projectId) {
+        return getSetting(ConfigConstants.EMAIL_ENABLE_SERVICE, projectId, "0").equals("1");
     }
 
     /**
@@ -622,7 +631,8 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Returns list of available CRS
-     * @return 
+     *
+     * @return
      */
     @Override
     public List<Crs> getCrss() {
@@ -631,8 +641,9 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Returns CRS by provided srid
+     *
      * @param srid srid of CRS
-     * @return 
+     * @return
      */
     @Override
     public Crs getCrs(int srid) {
@@ -643,8 +654,9 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Saves provided CRS
+     *
      * @param crs CRS object to save
-     * @return 
+     * @return
      */
     @Override
     @RolesAllowed(RolesConstants.ADMIN_MANAGE_SETTINGS)
@@ -654,12 +666,13 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Returns list of layer queries
+     *
      * @param locale Locale code
-     * @return 
+     * @return
      */
     @Override
     public List<Query> getQueries(String locale) {
-        if(locale != null){
+        if (locale != null) {
             Map params = new HashMap<String, Object>();
             params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, locale);
             return getRepository().getEntityList(Query.class, params);
@@ -669,13 +682,14 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Returns layer query
+     *
      * @param name Query name
      * @param locale Locale code
-     * @return 
+     * @return
      */
     @Override
     public Query getQuery(String name, String locale) {
-        if(locale != null){
+        if (locale != null) {
             Map params = new HashMap<String, Object>();
             params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, locale);
             params.put(CommonSqlProvider.PARAM_WHERE_PART, "name='" + name + "'");
@@ -686,8 +700,9 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Saves layer query
+     *
      * @param query Query object to save
-     * @return 
+     * @return
      */
     @RolesAllowed(RolesConstants.ADMIN_MANAGE_SETTINGS)
     @Override
@@ -697,12 +712,13 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Returns list of map layers
+     *
      * @param locale Locale code
-     * @return 
+     * @return
      */
     @Override
     public List<ConfigMapLayer> getConfigMapLayers(String locale) {
-        if(locale != null){
+        if (locale != null) {
             Map params = new HashMap<String, Object>();
             params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, locale);
             return getRepository().getEntityList(ConfigMapLayer.class, params);
@@ -712,13 +728,14 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Returns map layer
+     *
      * @param name Layer name
      * @param locale Locale code
-     * @return 
+     * @return
      */
     @Override
     public ConfigMapLayer getConfigMapLayer(String name, String locale) {
-        if(locale != null){
+        if (locale != null) {
             Map params = new HashMap<String, Object>();
             params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, locale);
             params.put(CommonSqlProvider.PARAM_WHERE_PART, "name='" + name + "'");
@@ -729,12 +746,104 @@ public class SystemCSEJB extends AbstractEJB implements SystemCSEJBLocal {
 
     /**
      * Saves map layer
+     *
      * @param mapLayer Map layer to save
-     * @return 
+     * @return
      */
     @RolesAllowed(RolesConstants.ADMIN_MANAGE_SETTINGS)
     @Override
     public ConfigMapLayer saveConfigMapLayer(ConfigMapLayer mapLayer) {
         return getRepository().saveEntity(mapLayer);
+    }
+
+    /**
+     * Returns all reports
+     *
+     * @param locale Locale code
+     * @return
+     */
+    @Override
+    public List<ReportDescription> getAllReports(String locale) {
+        if (locale != null) {
+            Map params = new HashMap<String, Object>();
+            params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, locale);
+            return getRepository().getEntityList(ReportDescription.class, params);
+        }
+        return getRepository().getEntityList(ReportDescription.class);
+    }
+
+    /**
+     * Returns reports filtered by display in menu flag
+     *
+     * @param locale Locale code
+     * @param isForMenu Indicates whether to return reports for displaying in
+     * the menu or not.
+     * @return
+     */
+    @Override
+    public List<ReportDescription> getReports(String locale, boolean isForMenu) {
+        Map params = new HashMap<String, Object>();
+        params.put(CommonSqlProvider.PARAM_LANGUAGE_CODE, locale);
+        params.put(CommonSqlProvider.PARAM_WHERE_PART, "display_in_menu='" + (isForMenu ? "t" : "f") + "'");
+        return getRepository().getEntityList(ReportDescription.class, params);
+    }
+
+    /**
+     * Returns report by ID
+     *
+     * @param id Report ID
+     * @param locale Locale code
+     * @return
+     */
+    @Override
+    public ReportDescription getReportById(String id, String locale) {
+        if (locale != null) {
+            return getRepository().getEntity(ReportDescription.class, id, locale);
+        }
+        return getRepository().getEntity(ReportDescription.class, id, locale);
+    }
+    
+    /**
+     * Returns project by ID
+     *
+     * @param id Project ID
+     * @param lang Locale code
+     * @return
+     */
+    @Override
+    public Project getProject(String id, String lang) {
+        return getRepository().getEntity(Project.class, id, lang);
+    }
+
+    /**
+     * Returns project area/boundary
+     *
+     * @param projectId Project ID
+     * @return
+     */
+    @Override
+    public String getProjectArea(String projectId) {
+        HashMap params = new HashMap();
+        params.put(CommonSqlProvider.PARAM_QUERY, "select ST_AsText(boundary) from system.project where id = #{projectId}");
+        params.put("projectId", projectId);
+        return getRepository().getScalar(String.class, params);
+    }
+    
+    /**
+     * Checks if current user can access provided project
+     *
+     * @param projectId Project ID
+     * @return
+     */
+    @Override
+    public boolean canAccessProject(String projectId) {
+        if(StringUtility.isEmpty(projectId)){
+            return false;
+        }
+        HashMap params = new HashMap();
+        params.put(CommonSqlProvider.PARAM_QUERY, "select count(1) > 0 from system.project_appuser pu inner join system.appuser u on pu.appuser_id = u.id where u.username = #{userName} and pu.project_id = #{projectId}");
+        params.put("projectId", projectId);
+        params.put("userName", getUserName());
+        return getRepository().getScalar(Boolean.class, params);
     }
 }

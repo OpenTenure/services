@@ -1,8 +1,8 @@
 package org.sola.cs.services.ejbs.claim.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.sola.services.common.repository.AccessFunctions;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 
@@ -28,17 +28,20 @@ public class AdministrativeBoundary extends AbstractVersionedEntity {
     @AccessFunctions(onSelect = "ST_AsText(geom)",
             onChange = "ST_GeomFromText(#{geom})")
     private String geom;
+    @Column(name = "project_id", updatable = false)
+    private String projectId;
 
+    public static final String PARAM_USER_NAME = "userName";
     public static final String QUERY_SELECT_APPROVED = "WITH RECURSIVE all_administrative_boundaries AS (\n"
-            + " SELECT id, name, type_code, authority_name, parent_id, recorder_name, status_code, ST_AsText(geom) as geom, rowversion, change_user, rowidentifier, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path \n"
+            + " SELECT id, name, type_code, authority_name, parent_id, recorder_name, project_id, status_code, ST_AsText(geom) as geom, rowversion, change_user, rowidentifier, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path \n"
             + " FROM opentenure.administrative_boundary \n"
-            + " WHERE parent_id is null and status_code = 'approved' \n"
+            + " WHERE parent_id is null and status_code = 'approved' and project_id in (select pu.project_id from system.project_appuser pu inner join system.appuser u on pu.appuser_id = u.id where username= #{" + PARAM_USER_NAME + "}) \n"
             + "UNION \n"
-            + " SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.recorder_name, b.status_code, ST_AsText(b.geom) as geom, b.rowversion, b.change_user, b.rowidentifier, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path \n"
+            + " SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.recorder_name, b.project_id, b.status_code, ST_AsText(b.geom) as geom, b.rowversion, b.change_user, b.rowidentifier, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path \n"
             + " FROM opentenure.administrative_boundary b inner join all_administrative_boundaries ab on b.parent_id = ab.id \n"
-            + " WHERE b.status_code = 'approved' \n"
+            + " WHERE b.status_code = 'approved' and b.project_id in (select pu.project_id from system.project_appuser pu inner join system.appuser u on pu.appuser_id = u.id where username= #{" + PARAM_USER_NAME + "}) \n"
             + ")\n"
-            + "SELECT id, name, type_code, authority_name, parent_id, recorder_name, status_code, geom, rowversion, change_user, rowidentifier \n"
+            + "SELECT id, name, type_code, authority_name, parent_id, recorder_name, project_id, status_code, geom, rowversion, change_user, rowidentifier \n"
             + "FROM all_administrative_boundaries \n"
             + "ORDER BY path, level;";
 
@@ -108,5 +111,13 @@ public class AdministrativeBoundary extends AbstractVersionedEntity {
 
     public void setGeom(String geom) {
         this.geom = geom;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 }

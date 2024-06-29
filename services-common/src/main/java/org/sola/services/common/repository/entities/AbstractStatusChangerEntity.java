@@ -27,8 +27,8 @@
  */
 package org.sola.services.common.repository.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 
 /**
  * It is supperclass that is used as a parent class for entities that are

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.sola.common.ClaimStatusConstants;
 import org.sola.services.common.repository.AccessFunctions;
 import org.sola.services.common.repository.ChildEntity;
@@ -101,6 +101,8 @@ public class Claim extends AbstractVersionedEntity {
     private List<Claim> childClaims;
     @Column(name = "boundary_id")
     private String boundaryId;
+    @Column(name = "project_id", updatable = false)
+    private String projectId;
     
     public static final String PARAM_CHALLENGED_ID = "challengeId";
     public static final String PARAM_CLAIM_NUMBER = "claimNumber";
@@ -435,6 +437,14 @@ public class Claim extends AbstractVersionedEntity {
 
     public void setBoundaryId(String boundaryId) {
         this.boundaryId = boundaryId;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     public boolean getIsReadyForReview() {

@@ -1,9 +1,9 @@
 package org.sola.cs.services.ejb.system.repository.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Column;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import org.sola.services.common.repository.entities.AbstractEntity;
 
 @Table(name = "crs", schema = "system")

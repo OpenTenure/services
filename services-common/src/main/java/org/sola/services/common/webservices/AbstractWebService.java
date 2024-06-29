@@ -27,10 +27,10 @@
  */
 package org.sola.services.common.webservices;
 
-import javax.annotation.Resource;
-import javax.transaction.Status;
-import javax.transaction.UserTransaction;
-import javax.xml.ws.WebServiceContext;
+import jakarta.annotation.Resource;
+import jakarta.transaction.Status;
+import jakarta.transaction.UserTransaction;
+import jakarta.xml.ws.WebServiceContext;
 import org.sola.services.common.LocalInfo;
 import org.sola.services.common.faults.FaultUtility;
 import org.sola.services.common.faults.OptimisticLockingFault;

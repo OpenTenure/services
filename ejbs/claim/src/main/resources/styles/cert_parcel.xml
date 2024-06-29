@@ -70,6 +70,13 @@
                         <Fill>
                             <CssParameter name="fill">#000000</CssParameter>
                         </Fill>
+                        <Halo>
+                            <Radius>2</Radius>
+                            <Fill>
+                                <CssParameter name="fill">#FFFFFF</CssParameter>
+                                <CssParameter name="fill-opacity">1</CssParameter>
+                            </Fill>
+                        </Halo>
                     </TextSymbolizer>
                 </Rule>
                 <Rule>
@@ -106,6 +113,13 @@
                         <Fill>
                             <CssParameter name="fill">#000000</CssParameter>
                         </Fill>
+                        <Halo>
+                            <Radius>2</Radius>
+                            <Fill>
+                                <CssParameter name="fill">#FFFFFF</CssParameter>
+                                <CssParameter name="fill-opacity">1</CssParameter>
+                            </Fill>
+                        </Halo>
                     </TextSymbolizer>
                 </Rule>
             </FeatureTypeStyle>

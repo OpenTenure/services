@@ -32,6 +32,6 @@
 @XmlSchema(namespace=ServiceConstants.FAULTS_NAMESPACE)
 package org.sola.services.common.faults;
 
-import javax.xml.bind.annotation.XmlSchema;
+import jakarta.xml.bind.annotation.XmlSchema;
 import org.sola.services.common.ServiceConstants;
 

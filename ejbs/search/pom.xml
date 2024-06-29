@@ -5,7 +5,7 @@
     <parent>
         <artifactId>sola-cs-ejbs</artifactId>
         <groupId>org.sola.cs.services</groupId>
-        <version>2020a</version>
+        <version>2024a</version>
     </parent>
     <groupId>org.sola.cs.services.ejbs</groupId>
     <artifactId>sola-cs-search</artifactId>
@@ -37,7 +37,7 @@
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
-            <version>3.0.6</version>
+            <version>${mybatis.version}</version>
         </dependency>
     </dependencies>
 </project>

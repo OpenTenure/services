@@ -32,11 +32,12 @@
 package org.sola.cs.services.ejb.search.repository.entities;
 
 import java.util.List;
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.sola.services.common.repository.ChildEntityList;
+import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.services.common.repository.Localized;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 
@@ -48,7 +49,14 @@ import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 @Cacheable
 public class ConfigMapLayer extends AbstractReadOnlyEntity {
 
-    public static final String QUERY_ORDER_BY = "item_order";
+    public static final String PARAM_PROJECT_ID = "project_id";
+    public static final String QUERY_BY_PROJECT = "select name, type_code, active, url, wms_layers, wms_version, wms_format, pojo_query_name, pojo_query_name_for_select, "
+            + "pojo_structure, shape_location, style, "
+            + "get_translation(title, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as title, visible_in_start, security_user, security_password,"
+            + "use_in_public_display, use_for_ot \n"
+            + "from system.config_map_layer l inner join system.project_map_layer pl on l.name = pl.layer_id \n"
+            + "where pl.project_id = #{" + PARAM_PROJECT_ID + "} order by pl.layer_order desc, l.title";
+    
     @Id
     @Column(name = "name")
     private String id;

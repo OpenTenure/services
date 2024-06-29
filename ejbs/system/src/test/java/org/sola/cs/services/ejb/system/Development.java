@@ -30,8 +30,8 @@
  */
 package org.sola.cs.services.ejb.system;
 
-import javax.transaction.Status;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Status;
+import jakarta.transaction.UserTransaction;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;

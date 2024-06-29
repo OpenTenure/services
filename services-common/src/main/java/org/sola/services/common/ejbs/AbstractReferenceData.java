@@ -31,7 +31,7 @@
  */
 package org.sola.services.common.ejbs;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *

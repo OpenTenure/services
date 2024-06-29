@@ -1,6 +1,6 @@
 package org.sola.cs.services.ejb.search.repository.entities;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 
 public class GeoJsonAdministrativeBoundary extends AbstractReadOnlyEntity {
@@ -17,13 +17,14 @@ public class GeoJsonAdministrativeBoundary extends AbstractReadOnlyEntity {
     private String geom;
 
     public static final String PARAM_ID = "id";
-
+    public static final String PARAM_PROJECT_ID = "projectId";
+    
     private static final String SELECT_PART
             = "select b.id, b.type_code, b.name, ST_AsGeoJSON(st_transform(st_setsrid(b.geom, 4326), 3857), 5, 0) as geom, b.status_code \n"
             + "from opentenure.administrative_boundary b ";
 
     public static final String QUERY_SEARCH_BY_ID = SELECT_PART
-            + "WHERE b.id = #{" + PARAM_ID + "};";
+            + "WHERE c.project_id = #{" + PARAM_PROJECT_ID + "} and b.id = #{" + PARAM_ID + "};";
 
     public GeoJsonAdministrativeBoundary() {
         super();

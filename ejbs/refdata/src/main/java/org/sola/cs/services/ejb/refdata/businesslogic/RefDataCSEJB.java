@@ -2,9 +2,9 @@ package org.sola.cs.services.ejb.refdata.businesslogic;
 
 import java.util.HashMap;
 import java.util.List;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import org.sola.common.RolesConstants;
 import org.sola.services.common.ejbs.AbstractEJB;
 import org.sola.services.common.repository.CommonSqlProvider;

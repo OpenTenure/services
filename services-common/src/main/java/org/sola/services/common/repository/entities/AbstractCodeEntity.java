@@ -31,9 +31,9 @@
  */
 package org.sola.services.common.repository.entities;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Id;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import org.sola.services.common.repository.Localized;
 
 /**

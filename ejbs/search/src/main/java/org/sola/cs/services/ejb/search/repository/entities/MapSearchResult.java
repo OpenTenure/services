@@ -1,6 +1,6 @@
 package org.sola.cs.services.ejb.search.repository.entities;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 
 public class MapSearchResult extends AbstractReadOnlyEntity {
@@ -15,6 +15,7 @@ public class MapSearchResult extends AbstractReadOnlyEntity {
     private String geom;
 
     public static final String PARAM_NAME = "claimantName";
+    public static final String PARAM_PROJECT_ID = "projectId";
     public static final String PARAM_CLAIM_NUMBER = "claimNumber";
     public static final String PARAM_POINT = "pointParam";
     private static final String SELECT_PART
@@ -27,7 +28,8 @@ public class MapSearchResult extends AbstractReadOnlyEntity {
 
     public static final String QUERY_SEARCH = SELECT_PART
             + "where (position(lower(#{" + PARAM_NAME + "}) in lower(COALESCE(p.name, '') || ' ' || COALESCE(p.last_name, ''))) > 0 \n"
-            + "or position(lower(#{" + PARAM_CLAIM_NUMBER + "}) in lower(COALESCE(c.nr, ''))) > 0) \n"
+            + "or position(lower(#{" + PARAM_CLAIM_NUMBER + "}) in lower(COALESCE(c.nr, ''))) > 0) and \n"
+            + "c.project_id = #{" + PARAM_PROJECT_ID + "} \n"
             + "and (#{" + PARAM_POINT + "} = '' or ST_Contains(c.mapped_geometry, ST_GeomFromText(#{" + PARAM_POINT + "}, St_SRID(c.mapped_geometry)))) \n"
             + "and c.status_code NOT IN ('rejected','withdrawn','created') \n"
             + "group by c.id, c.nr \n"

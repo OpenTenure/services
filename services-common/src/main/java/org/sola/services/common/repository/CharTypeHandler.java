@@ -55,6 +55,7 @@ import org.apache.ibatis.type.TypeHandler;
  * data type and not the primitive char data type. 
  * @author soladev
  */
+
 public class CharTypeHandler implements TypeHandler {
 
     @Override
@@ -84,4 +85,14 @@ public class CharTypeHandler implements TypeHandler {
         ps.setString(i, Character.toString(((Character) parameter).charValue()));
     }
 
+    @Override
+    public Object getResult(ResultSet rs, int i) throws SQLException {
+        String s = rs.getString(i);
+        if (rs.wasNull()) {
+            return null;
+        } else {
+            Character c = s.charAt(0);
+            return new Character(c);
+        }
+    }
 }

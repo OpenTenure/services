@@ -1,6 +1,6 @@
 package org.sola.cs.services.ejb.search.repository.entities;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 
 public class GeoJsonClaim extends AbstractReadOnlyEntity {
@@ -15,6 +15,7 @@ public class GeoJsonClaim extends AbstractReadOnlyEntity {
     private String geom;
 
     public static final String PARAM_BOUNDARY_ID = "boundaryId";
+    public static final String PARAM_PROJECT_ID = "projectId";
 
     private static final String SELECT_PART
             = "select c.id, c.nr, ST_AsGeoJSON(st_transform(st_setsrid(c.mapped_geometry, 4326), 3857), 5, 0) as geom, c.status_code \n"
@@ -24,7 +25,7 @@ public class GeoJsonClaim extends AbstractReadOnlyEntity {
             + "WHERE c.status_code NOT IN ('rejected','withdrawn','created') ORDER BY c.nr;";
 
     public static final String QUERY_SEARCH_BY_BOUNDARY = SELECT_PART
-            + "WHERE c.status_code NOT IN ('rejected','withdrawn','created') AND c.boundary_id IN ("
+            + "WHERE c.project_id = #{" + PARAM_PROJECT_ID + "} and c.status_code NOT IN ('rejected','withdrawn','created') AND c.boundary_id IN ("
             + "WITH RECURSIVE all_administrative_boundaries AS ( \n"
             + "        SELECT id, parent_id\n"
             + "        FROM opentenure.administrative_boundary \n"

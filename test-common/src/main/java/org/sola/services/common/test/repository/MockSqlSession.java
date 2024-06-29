@@ -35,6 +35,7 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.executor.BatchResult;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ResultHandler;
@@ -191,5 +192,20 @@ public class MockSqlSession implements SqlSession {
 
     public <T, U extends T> void addMapper(Class<T> typeKey, U mockMapper) {
         mappers.put(typeKey.getSimpleName(), mockMapper);
+    }
+
+    @Override
+    public <T> Cursor<T> selectCursor(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public <T> Cursor<T> selectCursor(String string, Object o) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public <T> Cursor<T> selectCursor(String string, Object o, RowBounds rb) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

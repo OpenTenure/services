@@ -27,7 +27,7 @@
  */
 package org.sola.services.common;
 
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * Enumeration used to identify the action (i.e. Insert, update, delete, disassociate) applicable

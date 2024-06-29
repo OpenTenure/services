@@ -1,7 +1,7 @@
 package org.sola.cs.services.ejb.refdata.businesslogic;
 
 import java.util.List;
-import javax.ejb.Local;
+import jakarta.ejb.Local;
 import org.sola.services.common.ejbs.AbstractEJBLocal;
 import org.sola.services.common.repository.entities.AbstractCodeEntity;
 import org.sola.cs.services.ejb.refdata.entities.Language;

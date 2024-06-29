@@ -1,9 +1,9 @@
 package org.sola.cs.services.ejbs.claim.entities;
 
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import static org.sola.cs.services.ejbs.claim.entities.AttachmentChunk.PARAM_USER_NAME;
 import org.sola.services.common.repository.entities.AbstractVersionedEntity;
 

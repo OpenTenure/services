@@ -1,6 +1,6 @@
 package org.sola.cs.services.ejb.search.repository.entities;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 
@@ -26,64 +26,67 @@ public class AdministrativeBoundarySearchResult extends AbstractReadOnlyEntity {
     private int level;
     @Column
     private String path;
+    @Column
+    private String projectId;
 
     public static final String PARAM_PARENT_ID = "parentId";
     public static final String PARAM_ID = "id";
+    public static final String PARAM_PROJECT_ID = "projectId";
 
     private static final String SELECT_PART = ""
             + "WITH RECURSIVE all_administrative_boundaries AS (\n "
-            + "  SELECT id, name, type_code, authority_name, parent_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path\n "
+            + "  SELECT id, name, type_code, authority_name, parent_id, project_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path\n "
             + "  FROM opentenure.administrative_boundary \n "
             + "  WHERE parent_id is null\n "
             + " UNION \n "
-            + "	 SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path\n "
+            + "	 SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.project_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path\n "
             + "  FROM opentenure.administrative_boundary b inner join all_administrative_boundaries ab on b.parent_id = ab.id\n "
             + ")\n "
-            + "SELECT b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level, b.path::varchar \n"
+            + "SELECT b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, project_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level, b.path::varchar \n"
             + "FROM (all_administrative_boundaries b INNER JOIN opentenure.administrative_boundary_type bt ON b.type_code = bt.code) INNER JOIN opentenure.administrative_boundary_status bs ON b.status_code = bs.code ";
 
-    public static final String QUERY_GET_ALL = SELECT_PART + "ORDER BY b.path, b.level";
+    public static final String QUERY_GET_ALL = SELECT_PART + "WHERE b.project_id = #{ " + PARAM_PROJECT_ID + "} ORDER BY b.path, b.level";
     
     public static final String QUERY_GET_APPROVED = ""
             + "WITH RECURSIVE all_administrative_boundaries AS (\n "
-            + "  SELECT id, name, type_code, authority_name, parent_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path\n "
+            + "  SELECT id, name, type_code, authority_name, parent_id, project_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path\n "
             + "  FROM opentenure.administrative_boundary \n "
             + "  WHERE parent_id is null and status_code = 'approved'\n "
             + " UNION \n "
-            + "	 SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path\n "
+            + "	 SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.project_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path\n "
             + "  FROM opentenure.administrative_boundary b inner join all_administrative_boundaries ab on b.parent_id = ab.id\n "
             + ")\n "
-            + "SELECT b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level, b.path::varchar \n"
+            + "SELECT b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, b.project_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level, b.path::varchar \n"
             + "FROM (all_administrative_boundaries b INNER JOIN opentenure.administrative_boundary_type bt ON b.type_code = bt.code) INNER JOIN opentenure.administrative_boundary_status bs ON b.status_code = bs.code "
-            + "WHERE b.status_code = 'approved' ORDER BY b.path, b.level";
+            + "WHERE b.project_id = #{ " + PARAM_PROJECT_ID + "} and b.status_code = 'approved' ORDER BY b.path, b.level";
 
     public static final String QUERY_GET_ALL_PARENTS = SELECT_PART
-            + "WHERE type_code not in (select code from opentenure.administrative_boundary_type order by level desc limit 1)\n "
+            + "WHERE b.project_id = #{ " + PARAM_PROJECT_ID + "} AND type_code not in (select code from opentenure.administrative_boundary_type order by level desc limit 1)\n "
             + "ORDER BY b.path, b.level";
 
     public static final String QUERY_GET_CHILDREN = ""
             + "WITH RECURSIVE all_administrative_boundaries AS (\n "
-            + "  SELECT id, name, type_code, authority_name, parent_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path\n "
+            + "  SELECT id, name, type_code, authority_name, parent_id, project_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path\n "
             + "  FROM opentenure.administrative_boundary \n "
             + "  WHERE parent_id = #{" + PARAM_PARENT_ID + "}\n "
             + " UNION \n "
-            + "	 SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path\n "
+            + "	 SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.project_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path\n "
             + "  FROM opentenure.administrative_boundary b inner join all_administrative_boundaries ab on b.parent_id = ab.id\n "
             + ")\n "
-            + "SELECT b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level, b.path::varchar \n"
+            + "SELECT b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, b.project_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level, b.path::varchar \n"
             + "FROM (all_administrative_boundaries b INNER JOIN opentenure.administrative_boundary_type bt ON b.type_code = bt.code) INNER JOIN opentenure.administrative_boundary_status bs ON b.status_code = bs.code "
             + "ORDER BY b.path, b.level";
 
     public static final String QUERY_GET_PARENTS = ""
             + "WITH RECURSIVE all_administrative_boundaries AS (\n"
-            + "        SELECT id, name, type_code, authority_name, parent_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path \n"
+            + "        SELECT id, name, type_code, authority_name, parent_id, project_id, status_code, 1 as level, array[ROW_NUMBER() OVER (ORDER BY name)] AS path \n"
             + "        FROM opentenure.administrative_boundary \n"
-            + "        WHERE id = #{" + PARAM_ID + "} \n"
+            + "        WHERE id = #{" + PARAM_ID + "} and project_id = #{ " + PARAM_PROJECT_ID + "} \n"
             + "      UNION \n"
-            + "	SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path \n"
+            + "	SELECT b.id, b.name, b.type_code, b.authority_name, b.parent_id, b.project_id, b.status_code, ab.level + 1 as level, ab.path || (ROW_NUMBER() OVER (ORDER BY b.name)) AS path \n"
             + "        FROM opentenure.administrative_boundary b inner join all_administrative_boundaries ab on b.id = ab.parent_id \n"
             + ") \n"
-            + "SELECT b.path::varchar, b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level \n"
+            + "SELECT b.path::varchar, b.id, b.name, b.type_code, get_translation(bt.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as type_name, b.authority_name, b.parent_id, b.project_id, b.status_code, get_translation(bs.display_value, #{" + CommonSqlProvider.PARAM_LANGUAGE_CODE + "}) as status_name, b.level \n"
             + "FROM (all_administrative_boundaries b INNER JOIN opentenure.administrative_boundary_type bt ON b.type_code = bt.code) INNER JOIN opentenure.administrative_boundary_status bs ON b.status_code = bs.code \n"
             + "ORDER BY b.level DESC;";
 
@@ -169,5 +172,13 @@ public class AdministrativeBoundarySearchResult extends AbstractReadOnlyEntity {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 }

@@ -29,7 +29,7 @@
  */
 package org.sola.services.common;
 
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * Enumeration identifying the database schema and table name for key entities

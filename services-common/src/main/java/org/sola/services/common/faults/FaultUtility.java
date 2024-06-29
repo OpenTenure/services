@@ -32,8 +32,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.logging.Level;
-import javax.ejb.EJBAccessException;
-import javax.persistence.OptimisticLockException;
+import jakarta.ejb.EJBAccessException;
+import jakarta.persistence.OptimisticLockException;
 import org.sola.common.DateUtility;
 import org.sola.cs.common.messaging.ServiceMessage;
 import org.sola.services.common.LocalInfo;
@@ -219,10 +219,10 @@ public final class FaultUtility {
      */
     public static <T> T getCause(Throwable t, Class<T> causeType) {
         T result = null;
-        if (t.getClass() == causeType) {
+        if (t != null && t.getClass() == causeType) {
             result = (T) t;
         } else {
-            if (t.getCause() != null) {
+            if (t != null && t.getCause() != null) {
                 result = getCause(t.getCause(), causeType);
             }
         }

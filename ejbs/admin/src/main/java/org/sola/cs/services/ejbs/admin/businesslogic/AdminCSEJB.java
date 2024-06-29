@@ -38,10 +38,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import org.apache.commons.io.FileUtils;
 import org.apache.ibatis.session.Configuration;
 import org.sola.common.ConfigConstants;
@@ -271,39 +271,6 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
     }
 
     /**
-     * Can be used to create a new user or save any updates to the details of an
-     * existing user. Cannot be used to change the users password. This can only
-     * be done using the
-     * {@linkplain #changePassword(java.lang.String, java.lang.String) changePassword}
-     * method.
-     * <p>
-     * Requires the {@linkplain RolesConstants#ADMIN_MANAGE_SECURITY} role. </p>
-     *
-     * @param user The details of the user to save
-     * @return The user details after the save is completed
-     */
-    @RolesAllowed({RolesConstants.ADMIN_MANAGE_SECURITY, RolesConstants.ADMIN_CHANGE_PASSWORD})
-    @Override
-    public User saveUser(User user) {
-        User oldUser = getUserInfo(user.getUserName());
-        if (oldUser != null) {
-            if (!oldUser.isActive() && user.isActive()) {
-                // Send email
-                if (systemEJB.isEmailServiceEnabled() && !StringUtility.isEmpty(user.getEmail())) {
-                    String msgBody = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_ACTIVATION_BODY, "");
-                    String msgSubject = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_ACTIVATION_SUBJECT, "");
-
-                    msgBody = msgBody.replace(EmailVariables.FULL_USER_NAME, user.getFirstName());
-                    msgBody = msgBody.replace(EmailVariables.USER_NAME, user.getUserName());
-
-                    systemEJB.sendEmail(user.getFullName(), user.getEmail(), msgBody, msgSubject);
-                }
-            }
-        }
-        return getRepository().saveEntity(user);
-    }
-
-    /**
      * Saves current user
      *
      * @param user User object to be saved
@@ -352,13 +319,17 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
 
         // Set password
         changeUserPassword(user.getUserName(), passwd);
-
+        String projectId = null;
+        if(user.getProjects() != null && !user.getProjects().isEmpty()) {
+            projectId = user.getProjects().get(0).getProjectId();
+        }
+        
         // Send email
-        if (systemEJB.isEmailServiceEnabled() && !StringUtility.isEmpty(user.getEmail())) {
-            String adminAddress = systemEJB.getSetting(ConfigConstants.EMAIL_ADMIN_ADDRESS, "");
-            String adminName = systemEJB.getSetting(ConfigConstants.EMAIL_ADMIN_NAME, "");
-            String msgBody = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_REG_BODY, "");
-            String msgSubject = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_REG_SUBJECT, "");
+        if (systemEJB.isEmailServiceEnabled(projectId) && !StringUtility.isEmpty(user.getEmail())) {
+            String adminAddress = systemEJB.getSetting(ConfigConstants.EMAIL_ADMIN_ADDRESS, projectId, "");
+            String adminName = systemEJB.getSetting(ConfigConstants.EMAIL_ADMIN_NAME, projectId, "");
+            String msgBody = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_REG_BODY, projectId, "");
+            String msgSubject = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_REG_SUBJECT, projectId, "");
             String activationPage = StringUtility.empty(LocalInfo.getBaseUrl());
             activationPage += "/user/regactivation.xhtml";
             //String activationUrl = activationPage + "?user=" + user.getUserName() + "&code=" + code;
@@ -373,8 +344,8 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
 
             if (!adminAddress.equals("")) {
                 // Send notification to admin
-                String msgAdminBody = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_USER_REG_BODY, "");
-                String msgAdminSubject = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_USER_REG_SUBJECT, "");
+                String msgAdminBody = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_USER_REG_BODY, projectId, "");
+                String msgAdminSubject = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_USER_REG_SUBJECT, projectId, "");
                 msgAdminBody = msgAdminBody.replace(EmailVariables.USER_NAME, user.getUserName());
 
                 systemEJB.sendEmail(adminName, adminAddress, msgAdminBody, msgAdminSubject);
@@ -421,21 +392,6 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
     }
 
     /**
-     * Can be used to create a new user group or save any updates to the details
-     * of an existing user group.
-     * <p>
-     * Requires the {@linkplain RolesConstants#ADMIN_MANAGE_SECURITY} role. </p>
-     *
-     * @param userGroup The details of the user group to save
-     * @return The user group after the save is completed
-     */
-    @RolesAllowed(RolesConstants.ADMIN_MANAGE_SECURITY)
-    @Override
-    public Group saveGroup(Group userGroup) {
-        return getRepository().saveEntity(userGroup);
-    }
-
-    /**
      * Returns the details for the specified group.
      *
      * <p>
@@ -448,24 +404,6 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
     @Override
     public Group getGroup(String groupId) {
         return getRepository().getEntity(Group.class, groupId);
-    }
-
-    /**
-     * Can be used to create a new security role or save any updates to the
-     * details of an existing security role.
-     * <p>
-     * Note that security roles are linked to the SOLA code base. Adding a new
-     * role also requires updating code before SOLA will recognize the role</p>
-     * <p>
-     * Requires the {@linkplain RolesConstants#ADMIN_MANAGE_SECURITY} role. </p>
-     *
-     * @param role The details of the security role to save
-     * @return The security role after the save is completed
-     */
-    @RolesAllowed(RolesConstants.ADMIN_MANAGE_SECURITY)
-    @Override
-    public Role saveRole(Role role) {
-        return getRepository().saveEntity(role);
     }
 
     /**
@@ -650,74 +588,14 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
     }
 
     /**
-     * Not used.
-     *
-     * @return The file name as it is saved in the server and ready for
-     * download.
-     *
-     * @throws IOException
-     */
-    @RolesAllowed(RolesConstants.CONSOLIDATION_EXTRACT)
-    @Override
-    public String consolidationExtract(
-            boolean generateConsolidationSchema, boolean everything, boolean dumpToFile) {
-        String processName = String.format("extract_%s", DateUtility.formatDate(DateUtility.now(), "yyyy_MM_dd_HH_mm"));
-        String[] commands = new String[8];
-
-        commands[0] = systemEJB.getSetting("command-extract", "");
-        commands[1] = getCurrentUser().getId();
-        commands[2] = everything ? "Y" : "N";
-        commands[3] = generateConsolidationSchema ? "Y" : "N";
-        commands[4] = dumpToFile ? "Y" : "N";
-        commands[5] = processName;
-        commands[6] = systemEJB.getSetting("path-to-backup", "");
-        commands[7] = systemEJB.getSetting(PATH_PROCESS_LOG, "");
-        try {
-            Runtime.getRuntime().exec(commands);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-        return processName;
-    }
-
-    /**
-     * Not used.
-     *
-     * @param processName
-     * @param languageCode
-     * @param fileInServer
-     * @param password
-     * @return
-     */
-    @RolesAllowed(RolesConstants.CONSOLIDATION_CONSOLIDATE)
-    @Override
-    public String consolidationConsolidate(String extractedFile, boolean mergeConsolidationSchema) {
-        String processName = String.format("consolidate_%s", DateUtility.formatDate(DateUtility.now(), "yyyy_MM_dd_HH_mm"));
-        String[] commands = new String[8];
-
-        commands[0] = systemEJB.getSetting("command-consolidate", "");
-        commands[1] = getCurrentUser().getId();
-        commands[2] = mergeConsolidationSchema ? "Y" : "N";
-        commands[3] = extractedFile.isEmpty() ? "N/A" : extractedFile;
-        commands[4] = processName;
-        commands[5] = systemEJB.getSetting("path-to-backup", "");
-        commands[6] = systemEJB.getSetting(PATH_PROCESS_LOG, "");
-        try {
-            Runtime.getRuntime().exec(commands);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-        return processName;
-    }
-
-    /**
      * Restores user password by generating activation code and sending a link
      * to the user for changing the password.
      *
      * @param email User's email
+     * @param projectId Project Id
      */
     @Override
-    public void restoreUserPassword(String email) {
+    public void restoreUserPassword(String email, String projectId) {
         User user = getUserByEmail(email);
         if (user == null || StringUtility.isEmpty(user.getEmail()) || !user.isActive()) {
             return;
@@ -730,9 +608,9 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
         getRepository().saveEntity(user);
 
         // Send email
-        if (systemEJB.isEmailServiceEnabled() && !StringUtility.isEmpty(user.getEmail())) {
-            String msgBody = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_PASSWD_RESTORE_BODY, "");
-            String msgSubject = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_PASSWD_RESTORE_SUBJECT, "");
+        if (systemEJB.isEmailServiceEnabled(projectId) && !StringUtility.isEmpty(user.getEmail())) {
+            String msgBody = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_PASSWD_RESTORE_BODY, projectId, "");
+            String msgSubject = systemEJB.getSetting(ConfigConstants.EMAIL_MSG_PASSWD_RESTORE_SUBJECT, projectId, "");
             String restoreUrl = StringUtility.empty(LocalInfo.getBaseUrl()) + "/user/pwdrestore.xhtml?code=" + code;
 
             msgBody = msgBody.replace(EmailVariables.FULL_USER_NAME, user.getFirstName());
@@ -754,124 +632,6 @@ public class AdminCSEJB extends AbstractEJB implements AdminCSEJBLocal {
         params.put(CommonSqlProvider.PARAM_WHERE_PART, User.QUERY_WHERE_ACTIVATION_CODE);
         params.put(User.PARAM_ACTIVATION_CODE, activationCode);
         return getRepository().getEntity(User.class, params);
-    }
-
-    /**
-     * It initializes a new process progress.
-     *
-     * @param processName Process name
-     * @param maximumValue The maximum value the progress can get
-     */
-    @Override
-    public void startProcessProgress(String processName, int maximumValue) {
-        String sqlStatement = "select system.process_progress_start(#{process_name}, #{maximum_value}) as vl";
-        Map params = new HashMap();
-        params.put(CommonSqlProvider.PARAM_QUERY, sqlStatement);
-        params.put(PROCESS_NAME, processName);
-        params.put("maximum_value", maximumValue);
-        getRepository().getScalar(Void.class, params);
-    }
-
-    /**
-     * It initializes a new process progress.
-     *
-     * @param processName Process name
-     * @param brNameToGenerateMaximumValue The name of the BR that will generate
-     * the maximum value the progress can get
-     */
-    @Override
-    public void startProcessProgressUsingBr(String processName, String brNameToGenerateMaximumValue) {
-        Result brResult = systemEJB.checkRuleGetResultSingle(brNameToGenerateMaximumValue, null);
-        Integer maximumValue = 100;
-        if (brResult.getValue() != null) {
-            maximumValue = Integer.parseInt(brResult.getValue().toString());
-        }
-        startProcessProgress(processName, maximumValue);
-    }
-
-    /**
-     * Returns the progress of a certain process.
-     *
-     * @param processName process name
-     * @param inPercentage True - the value in percentage, otherwise the
-     * absolute value
-     * @return
-     */
-    @Override
-    public int getProcessProgress(String processName, boolean inPercentage) {
-        String sqlStatement = "select system.process_progress_get(#{process_name}) as vl";
-        if (inPercentage) {
-            sqlStatement = "select system.process_progress_get_in_percentage(#{process_name}) as vl";
-        }
-        Map params = new HashMap();
-        params.put(CommonSqlProvider.PARAM_QUERY, sqlStatement);
-        params.put(PROCESS_NAME, processName);
-        return getRepository().getScalar(Integer.class, params);
-    }
-
-    /**
-     * Sets the progress in absolute value of the progress of a process.
-     *
-     * @param processName process name
-     * @param progressValue progress value
-     */
-    @Override
-    public void setProcessProgress(String processName, int progressValue) {
-        String sqlStatement = "select system.process_progress_set(#{process_name}, #{progress_value}) as vl";
-        Map params = new HashMap();
-        params.put(CommonSqlProvider.PARAM_QUERY, sqlStatement);
-        params.put(PROCESS_NAME, processName);
-        params.put("progress_value", progressValue);
-        getRepository().getScalar(Void.class, params);
-    }
-
-    /**
-     * Not used.
-     *
-     * @param processName
-     * @return
-     */
-    @Override
-    public String getProcessLog(String processName) {
-        processName = processName + ".log";
-        String logFilename = FileUtility.sanitizeFileName(processName, true);
-        String pathToProcessLog = systemEJB.getSetting(PATH_PROCESS_LOG, "");
-        String fullPathToLog = String.format("%s/%s", pathToProcessLog, logFilename);
-        try {
-            return FileUtils.readFileToString(new File(fullPathToLog));
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Updates the security classifications for a list of entities and
-     * identified by the entityTable and entity ids
-     *
-     * @param entityIds The ids of the entities to update
-     * @param entityTable Enumeration indicating the entity table to update
-     * @param classificationCode The new classification code to assign to the
-     * entities
-     * @param redactCode The new redactCode to assign to the entities
-     */
-    @RolesAllowed(RolesConstants.CLASSIFICATION_CHANGE_CLASS)
-    @Override
-    public void saveSecurityClassifications(List<String> entityIds, EntityTable entityTable,
-            String classificationCode, String redactCode) {
-
-        Map params = new HashMap<String, Object>();
-        String updateSql = " UPDATE " + entityTable.getTable()
-                + " SET classification_code = #{classCode}, "
-                + "     redact_code = #{redactCode}, "
-                + "     change_user = #{user} "
-                + " WHERE id IN ("
-                + CommonSqlProvider.prepareListParams(entityIds, params) + ") ";
-
-        params.put(CommonSqlProvider.PARAM_QUERY, updateSql);
-        params.put("classCode", classificationCode);
-        params.put("redactCode", redactCode);
-        params.put("user", getCurrentUser().getUserName());
-        getRepository().bulkUpdate(params);
     }
 
     /**

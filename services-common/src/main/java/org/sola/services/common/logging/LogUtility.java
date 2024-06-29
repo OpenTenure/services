@@ -97,6 +97,9 @@ public final class LogUtility {
      * @return The stacktrace of the exception formatted as a string
      */
     public static String getStackTraceAsString(Exception ex) {
+        if(ex == null) {
+            return "";
+        }
         Writer result = new StringWriter();
         PrintWriter printWriter = new PrintWriter(result);
         ex.printStackTrace(printWriter);

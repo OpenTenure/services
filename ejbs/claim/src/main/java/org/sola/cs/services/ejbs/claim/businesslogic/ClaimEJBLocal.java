@@ -1,7 +1,7 @@
 package org.sola.cs.services.ejbs.claim.businesslogic;
 
 import java.util.List;
-import javax.ejb.Local;
+import jakarta.ejb.Local;
 import org.sola.cs.services.ejb.refdata.entities.SourceType;
 import org.sola.cs.services.ejbs.claim.entities.AdministrativeBoundary;
 import org.sola.cs.services.ejbs.claim.entities.Attachment;
@@ -23,21 +23,21 @@ import org.sola.services.common.ejbs.AbstractEJBLocal;
 public interface ClaimEJBLocal extends AbstractEJBLocal {
     List<ClaimStatus> getClaimStatuses(String languageCode);
     ClaimStatus getClaimStatus(String code, String languageCode);
-    Claim getClaim(String id);
+    Claim getClaim(String id, boolean checkAccess);
     Claim getClaimByNumber(String nr);
     List<Claim> getChallengingClaimsByChallengedId(String challengingId);
     Claim saveClaim(Claim claim, String languageCode);
     AttachmentBinary saveAttachment(AttachmentBinary attachment);
     void deleteClaim(String claimId);
     AttachmentBinary saveAttachmentFromChunks(AttachmentBinary attachment);
-    AttachmentChunk saveAttachmentChunk(AttachmentChunk chunk);
+    AttachmentChunk saveAttachmentChunk(AttachmentChunk chunk, String projectId);
     AttachmentChunk getAttachmentLastChunk(String attachmentId);
     AttachmentBinary getAttachment(String attachmentId);
     List<AttachmentChunk> getAttachmentChunks(String attachmentId);
     boolean deleteAttachmentChunks(String attachmentId);
     boolean deleteClaimChunks(String claimId);
-    int getMaxFileSize();
-    int getUploadLimit();
+    int getMaxFileSize(String projectId);
+    int getUploadLimit(String projectId);
     List<LandUse> getLandUses(String languageCode);
     List<RejectionReason> getRejectionReasons(String languageCode);
     boolean withdrawClaim(String claimId);
@@ -74,7 +74,7 @@ public interface ClaimEJBLocal extends AbstractEJBLocal {
     List<FieldConstraintType> getFieldConstraintTypes(String languageCode);
     boolean checkFormTemplateHasPayload(String formName);
     boolean issueClaim(String claimId, String languageCode);
-    List<SourceType> getDocumentTypesForIssuance(String languageCode);
+    List<SourceType> getDocumentTypesForIssuance(String projectId, String languageCode);
     Claim transferClaim(Claim claim, String languageCode);
     Claim registerMortgage(Claim claim, String languageCode);
     Restriction terminateRestriction(String restrictionId);

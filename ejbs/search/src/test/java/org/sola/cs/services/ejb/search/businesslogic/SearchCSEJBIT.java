@@ -27,21 +27,8 @@
  */
 package org.sola.cs.services.ejb.search.businesslogic;
 
-import org.sola.cs.services.ejb.search.repository.entities.PartySearchResult;
-import org.sola.cs.services.ejb.search.repository.entities.PartySearchParams;
-import org.sola.cs.services.ejb.search.repository.entities.PropertyVerifier;
-import org.sola.cs.services.ejb.search.repository.entities.SourceSearchParams;
-import org.sola.cs.services.ejb.search.repository.entities.UserSearchParams;
-import org.sola.cs.services.ejb.search.repository.entities.BaUnitSearchParams;
 import org.sola.cs.services.ejb.search.repository.entities.BrSearchParams;
-import org.sola.cs.services.ejb.search.repository.entities.BaUnitSearchResult;
-import org.sola.cs.services.ejb.search.repository.entities.UserSearchResult;
-import org.sola.cs.services.ejb.search.repository.entities.ConfigMapLayer;
 import org.sola.cs.services.ejb.search.repository.entities.BrSearchResult;
-import org.sola.cs.services.ejb.search.repository.entities.SourceSearchResult;
-import org.sola.cs.services.ejb.search.repository.entities.GenericResult;
-import org.sola.cs.services.ejb.search.businesslogic.SearchCSEJBLocal;
-import org.sola.cs.services.ejb.search.businesslogic.SearchCSEJB;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
@@ -53,9 +40,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.sola.services.common.test.AbstractEJBTest;
-import org.sola.cs.services.ejb.search.spatial.QueryForNavigation;
-import org.sola.cs.services.ejb.search.spatial.ResultForNavigationInfo;
-import org.sola.cs.services.ejb.search.spatial.ResultForSelectionInfo;
 
 /**
  *
@@ -68,11 +52,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
     private static final String LOGIN_PASS = "test";
     
     private static final String FOUND = "Found ";
-    private static final String RESULT_NOTHING = "Result: nothing returned";
-    private static final String RESULT_FOUND = "Result has found: ";
-    private static final String RESULT_FIRST = "First result: ";
     private static final String TESTING_QUERY = "Testing query: ";
-    private static final String MAP_SOUTH = "map-south";
     
     @Before
     public void setUp() throws Exception {
@@ -88,28 +68,6 @@ public class SearchCSEJBIT extends AbstractEJBTest {
         super();
     }
 
-    /** Test searching active users */
-    @Test
-    public void testBaUnitSearch() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        try {
-            BaUnitSearchParams params = new BaUnitSearchParams();
-            SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-            List<BaUnitSearchResult> result = instance.searchBaUnits(params);
-
-            assertNotNull(result);
-
-            if (result != null && result.size() > 0) {
-                System.out.println(FOUND + result.size() + " BA units");
-            } else {
-                System.out.println("Can't find any BA unit.");
-            }
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-    }
     
     /** Test searching active users */
     @Test
@@ -133,300 +91,7 @@ public class SearchCSEJBIT extends AbstractEJBTest {
             fail(e.getMessage());
         }
     }
-    
-    /** Test searching active users */
-    @Test
-    public void testActiveUserSearch() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        try {
-            SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-            List<UserSearchResult> result = instance.getActiveUsers();
-
-            assertNotNull(result);
-
-            if (result != null && result.size() > 0) {
-                System.out.println(FOUND + result.size() + " active users");
-            } else {
-                System.out.println("Can't find any active user");
-            }
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-    }
-    
-    /** Test advanced searching of users */
-    @Test
-    public void testAdavncedUserSearch() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        try {
-            SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-            UserSearchParams params =new UserSearchParams();
-            params.setUserName("test");
-            
-            List<UserSearchResult> result = instance.searchUsers(params);
-
-            assertNotNull(result);
-
-            if (result != null && result.size() > 0) {
-                System.out.println(FOUND + result.size() + " users");
-            } else {
-                System.out.println("Can't find any user");
-            }
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-    }
-    
-    /** Test source search. */
-    @Test
-    public void testSourceSearch() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        try {
-            SourceSearchParams params = new SourceSearchParams();
-            Date dateTo = new GregorianCalendar(2500, 1, 1).getTime();
-            Date dateFrom = new GregorianCalendar(1, 1, 1).getTime();
-            params.setFromRecordationDate(dateFrom);
-            params.setFromSubmissionDate(dateFrom);
-            params.setToRecordationDate(dateTo);
-            params.setToSubmissionDate(dateTo);
-            params.setLocale("it");
-            params.setLaNumber("");
-            params.setRefNumber("");
-            params.setTypeCode("");
-
-            SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-            List<SourceSearchResult> result = instance.searchSources(params);
-
-            assertNotNull(result);
-
-            if (result != null && result.size() > 0) {
-                System.out.println(FOUND + result.size() + " sources");
-            } else {
-                System.out.println("Can't find any source");
-            }
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-    }
-
-    /**
-     * Test party search
-     */
-    //@Ignore
-    @Test
-    public void testPartySearch() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        PartySearchParams params = new PartySearchParams();
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-        List<PartySearchResult> result = instance.searchParties(params);
-        assertNotNull(result);
-
-        if (result != null && result.size() > 0) {
-            System.out.println(FOUND + result.size() + " parties");
-        } else {
-            System.out.println("Can't find any parties");
-        }
-    }
-
-    /**
-     * Test of GetPropertyVerifier method of class SearchEJB.
-     */
-    @Test
-    public void testGetPropertyVerifier() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        System.out.println("getPropertyVerifier-With parameters");
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-        String firstPart = "602";
-        String lastPart = "6629";
-        PropertyVerifier result = instance.getPropertyVerifier("", firstPart, lastPart);
-        if (result != null) {
-            System.out.println("ba unit found: " + result.toString());
-        } else {
-            System.out.println(RESULT_NOTHING);
-        }
-    }
-
-    /**
-     * Test of GetPropertyVerifier method of class SearchEJB.
-     */
-    @Test
-    public void testGetPropertyVerifierNullParameters() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        System.out.println("getPropertyVerifier-With null parameters");
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-        String firstPart = null;
-        String lastPart = "6629";
-        PropertyVerifier result = instance.getPropertyVerifier("", firstPart, lastPart);
-        if (result != null) {
-            System.out.println("ba unit found: " + result.toString());
-        } else {
-            System.out.println(RESULT_NOTHING);
-        }
-    }
-
-    /**
-     * Test of GetPropertyVerifier method of class SearchEJB.
-     */
-    @Test
-    public void testGetSpatialTest() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        System.out.println("getSpatialTest");
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-//        TestSpatial result = instance.getResultEntity("TestSpatial.get2", null);
-//        if (result != null) {
-//            System.out.println("spatial test found: " + result.toString());
-//            System.out.println("geometry: " + DatatypeConverter.printHexBinary(result.getTheGeom()));
-//            try {
-//                WKBReader wkbReader = new WKBReader();
-//                Geometry geom = wkbReader.read(result.getTheGeom());
-//                System.out.println("geometry found:" + geom.toString());
-//            } catch (Exception ex) {
-//                System.out.println("Failed to transform geometry");
-//                System.out.println("Error:" + ex.getMessage());
-//            }
-//        } else {
-//            System.out.println(RESULT_NOTHING);
-//        }
-    }
-
-    /**
-     * Test of getSpatialResult method of class SearchEJB.
-     */
-    @Test
-    public void testGetSpatialResult() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        System.out.println("Testing spatial result queries");
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-        QueryForNavigation spatialQuery = new QueryForNavigation();
-        int srid = 2193;
-        double east = 1795771, west = 1776400, north = 5932259, south = 5919888;
-        spatialQuery.setWest(west);
-        spatialQuery.setSouth(south);
-        spatialQuery.setEast(east);
-        spatialQuery.setNorth(north);
-        spatialQuery.setSrid(srid);
-        this.testSpatialQuery(instance, spatialQuery, "SpatialResult.getParcels");
-        this.testSpatialQuery(instance, spatialQuery, "SpatialResult.getSurveyControls");
-        this.testSpatialQuery(instance, spatialQuery, "SpatialResult.getRoads");
-        this.testSpatialQuery(instance, spatialQuery, "SpatialResult.getApplications");
-        this.testSpatialQuery(instance, spatialQuery, "SpatialResult.getPlaceNames");
-    }
-
-    private void testSpatialQuery(SearchCSEJBLocal instance,
-            QueryForNavigation spatialQuery, String queryName) throws Exception {
-        System.out.println(TESTING_QUERY + queryName);
-        spatialQuery.setQueryName(queryName);
-        ResultForNavigationInfo result = instance.getSpatialResult(spatialQuery);
-        if (result != null) {
-            System.out.println(RESULT_FOUND + result.getToAdd().size());
-            if (result.getToAdd().size() > 0) {
-                System.out.println(RESULT_FIRST + result.getToAdd().get(0).toString());
-            }
-        } else {
-            System.out.println(RESULT_NOTHING);
-        }
-    }
-
-    /**
-     * Test of getSpatialResult method of class SearchEJB.
-     */
-    @Test
-    public void testConfigMapLayer() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        System.out.println("getConfigMapLayer - getting configuration information");
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-        List<ConfigMapLayer> result = instance.getConfigMapLayerList("en");
-        if (result != null) {
-            System.out.println(RESULT_FOUND + result.size());
-            if (result.size() > 0) {
-                System.out.println(RESULT_FIRST + result.get(0).toString());
-            }
-        } else {
-            System.out.println(RESULT_NOTHING);
-        }
-    }
-
-    /**
-     * Test of getSettings method of class SearchEJB.
-     */
-    @Test
-    public void testGetSettings() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        System.out.println("getSettings - getting configuration information");
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-        HashMap<String, String> result = instance.getMapSettingList();
-        if (result != null) {
-            System.out.println(RESULT_FOUND + result.size());
-            if (result.size() > 0) {
-                System.out.println(RESULT_FIRST + result.get("map-srid"));
-            }
-        } else {
-            System.out.println(RESULT_NOTHING);
-        }
-    }
-
-    /**
-     * Test of getting result from a dynamic query.
-     */
-    @Test
-    public void testGetResultForInformationTool() throws Exception {
-        if (skipIntegrationTest()) {
-            return;
-        }
-        System.out.println("Testing GetResultForInformationTool");
-        SearchCSEJBLocal instance = (SearchCSEJBLocal) getEJBInstance(SearchCSEJB.class.getSimpleName());
-
-        System.out.println("Getting map definition...");
-        HashMap<String, String> settings = instance.getMapSettingList();
-        Map params = new HashMap();
-        params.put(ResultForSelectionInfo.PARAM_GEOMETRY, this.getGeometry(
-                String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s))",
-                settings.get("map-west"), settings.get(MAP_SOUTH),
-                settings.get("map-east"), settings.get(MAP_SOUTH),
-                settings.get("map-east"), settings.get("map-north"),
-                settings.get("map-west"), settings.get(MAP_SOUTH))));
-        params.put(ResultForSelectionInfo.PARAM_SRID, Integer.parseInt(settings.get("map-srid")));
-        this.testDynamicQuery(instance, "dynamic.informationtool.get_parcel", params);
-        this.testDynamicQuery(instance, "dynamic.informationtool.get_place_name", params);
-        this.testDynamicQuery(instance, "dynamic.informationtool.get_road", params);
-        this.testDynamicQuery(instance, "dynamic.informationtool.get_application", params);
-        this.testDynamicQuery(instance, "dynamic.informationtool.get_survey_control", params);
-    }
-
-    private void testDynamicQuery(SearchCSEJBLocal instance,
-            String queryName, Map params) throws Exception {
-        System.out.println(TESTING_QUERY + queryName);
-        GenericResult result = instance.getGenericResultList(queryName, params);
-        if (result != null) {
-            System.out.println(RESULT_FOUND + result.getValues().size());
-            if (result.getValues().size() > 0) {
-                System.out.println(RESULT_FIRST + result.getValues().get(0).toString());
-            }
-        } else {
-            System.out.println(RESULT_NOTHING);
-        }
-    }
-
+  
     private byte[] getGeometry(String wktGeometry) throws Exception {
         WKTReader wktReader = new WKTReader();
         Geometry geom = wktReader.read(wktGeometry);

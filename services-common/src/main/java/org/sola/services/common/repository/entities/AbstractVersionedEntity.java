@@ -31,7 +31,7 @@
  */
 package org.sola.services.common.repository.entities;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import org.sola.services.common.LocalInfo;
 
 /**

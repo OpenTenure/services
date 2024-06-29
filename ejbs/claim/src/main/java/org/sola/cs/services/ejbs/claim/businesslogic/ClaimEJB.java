@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import org.sola.common.ClaimStatusConstants;
 import org.sola.common.ConfigConstants;
 import org.sola.common.DateUtility;
@@ -29,6 +29,8 @@ import org.sola.cs.services.ejb.refdata.entities.AdministrativeBoundaryStatus;
 import org.sola.cs.services.ejb.refdata.entities.SourceType;
 import org.sola.cs.services.ejb.search.businesslogic.SearchCSEJBLocal;
 import org.sola.cs.services.ejb.search.repository.entities.AdministrativeBoundarySearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.ClaimSearchResult;
+import org.sola.cs.services.ejb.search.repository.entities.ProjectNameSearchResult;
 import org.sola.cs.services.ejbs.claim.entities.Attachment;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentBinary;
 import org.sola.cs.services.ejbs.claim.entities.AttachmentChunk;
@@ -86,12 +88,6 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     SearchCSEJBLocal searchEjb;
 
     private static final String RESULT = "result";
-    private static final int DPI = 96;
-    private static final String RESOURCES_PATH = "/styles/";
-    private final int mapMargin = 30;
-    private final int minGridCuts = 1;
-    private final int coordWidth = 67;
-    private final int roundNumber = 5;
 
     /**
      * Sets the entity package for the EJB to
@@ -136,10 +132,13 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
     @Override
     @RolesAllowed({RolesConstants.CS_ACCESS_CS})
-    public Claim getClaim(String id) {
+    public Claim getClaim(String id, boolean checkAccess) {
         Claim result = null;
         if (id != null) {
             result = getRepository().getEntity(Claim.class, id);
+            if (checkAccess) {
+                canViewClaim(result, true);
+            }
             // Populate parent and child lists
             if (result != null && !StringUtility.isEmpty(result.getCreateTransaction())) {
                 // Get parents
@@ -159,6 +158,22 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         return result;
     }
 
+    private boolean canViewClaim(Claim claim, boolean throwException) {
+        if (claim == null || StringUtility.isEmpty(claim.getProjectId())) {
+            return true;
+        }
+        return canAccessProject(claim.getProjectId(), throwException);
+    }
+        
+    private boolean canAccessProject(String projectId, boolean throwException) {
+        boolean canAccess = systemEjb.canAccessProject(projectId);
+
+        if (!canAccess && throwException) {
+            throw new SOLAException(ServiceMessage.OT_WS_CLAIM_ACCESS_FORBIDDEN);
+        }
+        return canAccess;
+    }
+    
     /**
      * Returns challenging claims by challenged claim id
      *
@@ -180,6 +195,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (claim == null) {
             throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
         }
+        canViewClaim(claim, true);
+        
         claim.setVersion(claim.getVersion() + 1);
         Date currentTime = Calendar.getInstance().getTime();
         String userName = getUserName();
@@ -216,6 +233,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
         }
 
+        canViewClaim(claim, true);
         String userName = getUserName();
 
         if (claim.getRestrictions() != null) {
@@ -257,6 +275,11 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
         }
 
+        canViewClaim(newClaim, true);
+        for(Claim c: oldClaims) {
+            canViewClaim(c, true);
+        }
+        
         // Make checks
         checkClaimToAdd(newClaim);
         if (oldClaims.size() < 2) {
@@ -295,6 +318,11 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
         }
 
+        canViewClaim(oldClaim, true);
+        for(Claim c: newClaims) {
+            canViewClaim(c, true);
+        }
+        
         // Make checks
         checkClaimToAdd(oldClaim);
         if (newClaims.size() < 2) {
@@ -349,6 +377,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
         }
 
+        canViewClaim(claim, true);
+        
         boolean newClaim = claim.isNew();
         boolean fullValidation = true;
         if (newClaim || claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.CREATED)) {
@@ -531,7 +561,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
         }
 
-        String requireSpatial = systemEjb.getSetting(ConfigConstants.REQUIRES_SPATIAL, "1");
+        String requireSpatial = systemEjb.getSetting(ConfigConstants.REQUIRES_SPATIAL, claim.getProjectId(), "1");
 
         if (fullValidation && requireSpatial.equals("1")
                 && StringUtility.isEmpty(claim.getMappedGeometry())) {
@@ -562,7 +592,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
         // Check area of intereset
         if (!StringUtility.isEmpty(claim.getMappedGeometry())
-                && !claimWithinCommunityArea(claim.getMappedGeometry())) {
+                && !claimWithinCommunityArea(claim.getMappedGeometry(), claim.getProjectId())) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_OUTSIDE_COMMUNITY);
             } else {
@@ -920,35 +950,12 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         return true;
     }
 
-    private long getClaimArea(String geom) {
-        if (StringUtility.isEmpty(geom)) {
-            return 0;
-        }
-
-        String sql = "SELECT ST_Area(ST_Transform(ST_SetSRID(ST_GeomFromText('%s'), 4326), 900913)) as result";
-        sql = String.format(sql, geom);
-
-        Map params = new HashMap<String, Object>();
-        params.put(CommonSqlProvider.PARAM_QUERY, sql);
-
-        ArrayList<HashMap> result = getRepository().executeSql(params);
-        if (result == null || result.size() < 1) {
-            return 0;
-        } else {
-            long area = (long) Double.parseDouble(result.get(0).get(RESULT).toString());
-            if (area % 5 >= 4) {
-                return (area - (area % 5)) + 5;
-            }
-            return area - (area % 5);
-        }
-    }
-
-    private boolean claimWithinCommunityArea(String geom) {
+    private boolean claimWithinCommunityArea(String geom, String projectId) {
         if (StringUtility.isEmpty(geom)) {
             return false;
         }
 
-        String communityArea = systemEjb.getSetting(ConfigConstants.OT_COMMUNITY_AREA, "");
+        String communityArea = systemEjb.getProjectArea(projectId);
 
         String sql = "select (ST_Contains(st_geomfromtext('%s'), st_geomfromtext('%s'))) as result";
         sql = String.format(sql, communityArea, geom);
@@ -978,6 +985,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         if (!isInRole(RolesConstants.CS_RECORD_CLAIM)) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.EXCEPTION_INSUFFICIENT_RIGHTS);
@@ -1028,6 +1039,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         if (!isInRole(RolesConstants.CS_RECORD_CLAIM)) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.EXCEPTION_INSUFFICIENT_RIGHTS);
@@ -1048,8 +1063,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     }
 
     @Override
-    public List<SourceType> getDocumentTypesForIssuance(String langaugeCode) {
-        String docTypesString = systemEjb.getSetting(ConfigConstants.DOCUMENTS_FOR_ISSUING_CERT, "");
+    public List<SourceType> getDocumentTypesForIssuance(String projectId, String langaugeCode) {
+        String docTypesString = systemEjb.getSetting(ConfigConstants.DOCUMENTS_FOR_ISSUING_CERT, projectId, "");
         List<SourceType> docTypes = new ArrayList<SourceType>();
        
         if (!StringUtility.isEmpty(docTypesString)) {
@@ -1058,7 +1073,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
                 List<SourceType> allDocTypes = refDataEjb.getCodeEntityList(SourceType.class, langaugeCode);
 
-                if (allDocTypes != null && allDocTypes.size() > 0) {
+                if (allDocTypes != null && !allDocTypes.isEmpty()) {
                     for (SourceType docType : allDocTypes) {
                         for (String docTypeCode : docTypeCodes) {
                             if (docType.getCode().equalsIgnoreCase(docTypeCode)) {
@@ -1083,15 +1098,15 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         canIssueClaim(claim, true);
 
         // Check documents 
-        List<SourceType> docTypes = getDocumentTypesForIssuance(langaugeCode);
+        List<SourceType> docTypes = getDocumentTypesForIssuance(claim.getProjectId(), langaugeCode);
 
-        if (docTypes.size() > 0) {
+        if (!docTypes.isEmpty()) {
             String missingDocs = "";
 
             for (SourceType docType : docTypes) {
                 boolean found = false;
 
-                if (claim.getAttachments() != null && claim.getAttachments().size() > 0) {
+                if (claim.getAttachments() != null && !claim.getAttachments().isEmpty()) {
                     for (Attachment attach : claim.getAttachments()) {
                         if (!StringUtility.isEmpty(attach.getTypeCode()) && attach.getTypeCode().equalsIgnoreCase(docType.getCode())) {
                             found = true;
@@ -1169,10 +1184,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
         // Delete claim challenges if any
         List<Claim> challenges = getChallengingClaimsByChallengedId(claimId);
-        if (challenges != null && challenges.size() > 0) {
+        if (challenges != null && !challenges.isEmpty()) {
             for (Claim challenge : challenges) {
                 // Delete attachments
-                if (challenge.getAttachments() != null && challenge.getAttachments().size() > 0) {
+                if (challenge.getAttachments() != null && !challenge.getAttachments().isEmpty()) {
                     for (Attachment att : challenge.getAttachments()) {
                         att.setEntityAction(EntityAction.DELETE);
                         getRepository().saveEntity(att);
@@ -1211,6 +1226,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         // Return true if claim has CREATED status and recorder is current user
         if (claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.CREATED)
                 && StringUtility.empty(claim.getRecorderName()).equalsIgnoreCase(getUserName())) {
@@ -1340,7 +1359,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
     @Override
     @RolesAllowed({RolesConstants.CS_RECORD_CLAIM, RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_MODERATE_CLAIM})
-    public AttachmentChunk saveAttachmentChunk(AttachmentChunk chunk) {
+    public AttachmentChunk saveAttachmentChunk(AttachmentChunk chunk, String projectId) {
         if (chunk == null || chunk.getBody() == null || chunk.getBody().length < 1) {
             throw new SOLAException(ServiceMessage.OT_WS_CHUNK_EMPTY);
         }
@@ -1350,7 +1369,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 || StringUtility.isEmpty(chunk.getId()) || StringUtility.isEmpty(chunk.getMd5())) {
             throw new SOLAException(ServiceMessage.OT_WS_EMPTY_REQUIRED_FIELDS);
         }
-
+        
         // Check chunk doesn't exist
         if (getRepository().getEntity(AttachmentChunk.class, chunk.getId()) != null) {
             throw new SOLAObjectExistsException(ServiceMessage.OT_WS_CHUNK_EXISTS);
@@ -1382,7 +1401,15 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
 
         // Check size limit
-        int maxFileSize = getMaxFileSize();
+        ClaimSearchResult claim = searchEjb.searchClaimById(chunk.getClaimId(), null);
+        if(claim != null && claim.getProjectId() != null){
+            projectId = claim.getProjectId();
+            canAccessProject(claim.getProjectId(), true);
+        } else {
+            canAccessProject(projectId, true);
+        }
+        
+        int maxFileSize = getMaxFileSize(projectId);
         if (maxFileSize > 0) {
             if (chunk.getSize() / 1024 > maxFileSize) {
                 throw new SOLAException(ServiceMessage.OT_WS_CHUNK_LARGE_SIZE);
@@ -1390,7 +1417,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
 
         // Check overall limit of loaded chunks/attachment size for the user.
-        int maxUploadingSize = getUploadLimit();
+        int maxUploadingSize = getUploadLimit(projectId);
         if (maxUploadingSize > 0) {
             long totalSize = chunk.getSize();
 
@@ -1462,7 +1489,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         params.put(AttachmentChunk.PARAM_ATTACHMENT_ID, attachmentId);
         List<AttachmentChunk> chunks = getRepository().getEntityList(AttachmentChunk.class, params);
 
-        if (chunks != null && chunks.size() > 0) {
+        if (chunks != null && !chunks.isEmpty()) {
             String userName = getUserName();
             for (AttachmentChunk chunk : chunks) {
                 if (!chunk.getUserName().equalsIgnoreCase(userName)) {
@@ -1489,7 +1516,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         params.put(AttachmentChunk.PARAM_CLAIM_ID, claimId);
         List<AttachmentChunk> chunks = getRepository().getEntityList(AttachmentChunk.class, params);
 
-        if (chunks != null && chunks.size() > 0) {
+        if (chunks != null && !chunks.isEmpty()) {
             String userName = getUserName();
             for (AttachmentChunk chunk : chunks) {
                 if (!chunk.getUserName().equalsIgnoreCase(userName)) {
@@ -1507,11 +1534,12 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     /**
      * Returns maximum file size in KB, that can be uploaded to the server.
      *
+     * @param projectId Project ID
      * @return
      */
     @Override
-    public int getMaxFileSize() {
-        String maxUploadingSizeString = systemEjb.getSetting(ConfigConstants.MAX_FILE_SIZE, "10000");
+    public int getMaxFileSize(String projectId) {
+        String maxUploadingSizeString = systemEjb.getSetting(ConfigConstants.MAX_FILE_SIZE, projectId, "10000");
         int maxUploadingSize = 0;
         if (maxUploadingSizeString != null && !maxUploadingSizeString.equals("")) {
             maxUploadingSize = Integer.parseInt(maxUploadingSizeString);
@@ -1522,11 +1550,12 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     /**
      * Returns maximum upload size in KB per day.
      *
+     * @param projectId Project ID
      * @return
      */
     @Override
-    public int getUploadLimit() {
-        String maxFileSizeString = systemEjb.getSetting(ConfigConstants.MAX_UPLOADING_DAILY_LIMIT, "10000");
+    public int getUploadLimit(String projectId) {
+        String maxFileSizeString = systemEjb.getSetting(ConfigConstants.MAX_UPLOADING_DAILY_LIMIT, projectId, "10000");
         int maxFileSize = 0;
         if (maxFileSizeString != null && !maxFileSizeString.equals("")) {
             maxFileSize = Integer.parseInt(maxFileSizeString);
@@ -1563,6 +1592,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         // Check user role
         if (!isInRole(RolesConstants.CS_RECORD_CLAIM)) {
             if (throwException) {
@@ -1632,7 +1665,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             String subject = ConfigConstants.EMAIL_MSG_CLAIM_WITHDRAW_SUBJECT;
 
             if (!StringUtility.isEmpty(claim.getChallengedClaimId())) {
-                challengedClaim = getClaim(claim.getChallengedClaimId());
+                challengedClaim = getClaim(claim.getChallengedClaimId(), true);
                 body = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_WITHDRAWAL_BODY;
                 subject = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_WITHDRAWAL_SUBJECT;
             }
@@ -1648,10 +1681,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             String userFirstName, String bodyName, String subjectName,
             Claim claim, Claim claimChallenge, String partyRole) {
         try {
-            if (systemEjb.isEmailServiceEnabled()) {
+            if (systemEjb.isEmailServiceEnabled(claim.getProjectId())) {
                 if (!StringUtility.isEmpty(email)) {
-                    String msgBody = systemEjb.getSetting(bodyName, "");
-                    String msgSubject = systemEjb.getSetting(subjectName, "");
+                    String msgBody = systemEjb.getSetting(bodyName, claim.getProjectId(), "");
+                    String msgSubject = systemEjb.getSetting(subjectName, claim.getProjectId(), "");
                     msgBody = msgBody.replace(EmailVariables.FULL_USER_NAME, userFullName);
                     msgBody = msgBody.replace(EmailVariables.USER_FIRST_NAME, userFirstName);
                     msgBody = msgBody.replace(EmailVariables.CLAIM_PARTY_ROLE, partyRole);
@@ -1667,7 +1700,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                         msgBody = msgBody.replace(EmailVariables.CLAIM_REJECTION_REASON, getRejectionReasonText(claim.getRejectionReasonCode()));
 
                         String comments = "";
-                        if (claim.getComments() != null && claim.getComments().size() > 0) {
+                        if (claim.getComments() != null && !claim.getComments().isEmpty()) {
                             comments = "<ul>";
                             for (ClaimComment comment : claim.getComments()) {
                                 comments += "<li>" + comment.getComment()
@@ -1742,7 +1775,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
 
             // Send to challengers
-            if (challenges != null && challenges.size() > 0) {
+            if (challenges != null && !challenges.isEmpty()) {
                 for (Claim challenge : challenges) {
                     if (!challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.WITHDRAWN)
                             && !challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.REJECTED)) {
@@ -1813,7 +1846,12 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
-        if (claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
+        if ((claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED) ||
+                 claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.ISSUED))
                 && isInRole(RolesConstants.CS_REVIEW_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)) {
             return true;
         } else {
@@ -1834,6 +1872,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
             }
+            return false;
+        }
+        
+        if(!canViewClaim(claim, throwException)){
             return false;
         }
 
@@ -1925,7 +1967,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             if (challengedClaim != null) {
                 claimStatusChanger.setChallengeExpiryDate(challengedClaim.getChallengeExpiryDate());
             } else {
-                String challengeExpiryDateString = systemEjb.getSetting(ConfigConstants.MODERATION_DATE, "");
+                String challengeExpiryDateString = systemEjb.getSetting(ConfigConstants.MODERATION_DATE, claimStatusChanger.getProjectId(), "");
                 Date challengeExpiryDate = null;
 
                 if (!StringUtility.isEmpty(challengeExpiryDateString)) {
@@ -1935,7 +1977,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 if (challengeExpiryDate != null && challengeExpiryDate.after(Calendar.getInstance().getTime())) {
                     claimStatusChanger.setChallengeExpiryDate(challengeExpiryDate);
                 } else {
-                    int days = Integer.parseInt(systemEjb.getSetting(ConfigConstants.MODERATION_DAYS, "30"));
+                    int days = Integer.parseInt(systemEjb.getSetting(ConfigConstants.MODERATION_DAYS, claimStatusChanger.getProjectId(), "30"));
                     Calendar cal = Calendar.getInstance();
                     cal.add(Calendar.DATE, days);
                     claimStatusChanger.setChallengeExpiryDate(cal.getTime());
@@ -1992,7 +2034,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             String subject = ConfigConstants.EMAIL_MSG_CLAIM_REJECT_SUBJECT;
 
             if (!StringUtility.isEmpty(claim.getChallengedClaimId())) {
-                challengedClaim = getClaim(claim.getChallengedClaimId());
+                challengedClaim = getClaim(claim.getChallengedClaimId(), true);
                 body = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_REJECTION_BODY;
                 subject = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_REJECTION_SUBJECT;
             }
@@ -2019,7 +2061,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if (changeClaimStatus(id, null, ClaimStatusConstants.REVIEWED, null)) {
             // Get claim challenges if any and approve them as well
             List<Claim> challenges = getChallengingClaimsByChallengedId(id);
-            if (challenges != null && challenges.size() > 0) {
+            if (challenges != null && !challenges.isEmpty()) {
                 for (Claim challenge : challenges) {
                     if (!challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.WITHDRAWN)
                             && !challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.CREATED)
@@ -2035,7 +2077,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             String subject = ConfigConstants.EMAIL_MSG_CLAIM_REVIEW_APPROVE_SUBJECT;
 
             if (!StringUtility.isEmpty(claim.getChallengedClaimId())) {
-                challengedClaim = getClaim(claim.getChallengedClaimId());
+                challengedClaim = getClaim(claim.getChallengedClaimId(), true);
                 body = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_REVIEW_BODY;
                 subject = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_REVIEW_SUBJECT;
             }
@@ -2061,7 +2103,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         // Revert claim review
         if (changeClaimStatus(claimId, null, ClaimStatusConstants.UNMODERATED, null)) {
             List<Claim> challenges = getChallengingClaimsByChallengedId(claimId);
-            if (challenges != null && challenges.size() > 0) {
+            if (challenges != null && !challenges.isEmpty()) {
                 for (Claim challenge : challenges) {
                     if (challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.REVIEWED)) {
                         changeClaimStatus(challenge.getId(), null, ClaimStatusConstants.UNMODERATED, null);
@@ -2100,7 +2142,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             String subject = ConfigConstants.EMAIL_MSG_CLAIM_MODERATION_APPROVE_SUBJECT;
 
             if (!StringUtility.isEmpty(claim.getChallengedClaimId())) {
-                challengedClaim = getClaim(claim.getChallengedClaimId());
+                challengedClaim = getClaim(claim.getChallengedClaimId(), true);
                 body = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_MODERATION_BODY;
                 subject = ConfigConstants.EMAIL_MSG_CLAIM_CHALLENGE_MODERATION_SUBJECT;
             }
@@ -2121,6 +2163,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
             }
+            return false;
+        }
+        
+        if(!canViewClaim(claim, throwException)){
             return false;
         }
 
@@ -2165,6 +2211,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
             return false;
         }
+        
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
 
         // Check user role
         if (!isInRole(RolesConstants.CS_REVIEW_CLAIM)) {
@@ -2205,6 +2255,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
             return false;
         }
+        
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
 
         // Check user role
         if (!isInRole(RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_PRINT_CERTIFICATE)) {
@@ -2237,6 +2291,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             }
             return false;
         }
+        
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
 
         // Check user role
         if (!isInRole(RolesConstants.CS_MODERATE_CLAIM)) {
@@ -2266,7 +2324,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         // Check existing challenges
         List<Claim> challenges = getChallengingClaimsByChallengedId(claim.getId());
 
-        if (challenges != null && challenges.size() > 0) {
+        if (challenges != null && !challenges.isEmpty()) {
             for (Claim challenge : challenges) {
                 if (challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.UNMODERATED)
                         || challenge.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.REVIEWED)) {
@@ -2293,6 +2351,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         // Check user role
         if (!isInRole(RolesConstants.CS_MODERATE_CLAIM)) {
             if (throwException) {
@@ -2302,7 +2364,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
 
         // Check claim status
-        if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED)) {
+        if (!claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.MODERATED) && !claim.getStatusCode().equalsIgnoreCase(ClaimStatusConstants.ISSUED)) {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_CANT_TRANSFER);
             }
@@ -2364,6 +2426,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         // Check user role
         if (!isInRole(RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_REVIEW_CLAIM)) {
             if (throwException) {
@@ -2398,6 +2464,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             if (throwException) {
                 throw new SOLAException(ServiceMessage.OT_WS_CLAIM_NOT_FOUND);
             }
+            return false;
+        }
+        
+        if(!canViewClaim(claim, throwException)){
             return false;
         }
 
@@ -2438,6 +2508,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         // Check user role
         if (!isInRole(RolesConstants.CS_MODERATE_CLAIM, RolesConstants.CS_REVIEW_CLAIM)) {
             if (throwException) {
@@ -2474,6 +2548,10 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             return false;
         }
 
+        if(!canViewClaim(claim, throwException)){
+            return false;
+        }
+        
         // Check user role
         if (!isInRole(RolesConstants.CS_MODERATE_CLAIM)) {
             if (throwException) {
@@ -2505,6 +2583,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     @RolesAllowed({RolesConstants.CS_RECORD_CLAIM})
     public void addClaimAttachment(String claimId, String attachmentId) {
         Claim claim = getRepository().getEntity(Claim.class, claimId);
+        if(claim != null){
+            canAccessProject(claim.getProjectId(), true);
+        }
         canAddDocumentsToClaim(claim, true);
 
         Attachment attch = getRepository().getEntity(Attachment.class, attachmentId);
@@ -2646,7 +2727,11 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     @RolesAllowed({RolesConstants.CS_ACCESS_CS})
     public AdministrativeBoundary getAdministrativeBoundary(String id) {
         if (id != null) {
-            return getRepository().getEntity(AdministrativeBoundary.class, id);
+            AdministrativeBoundary boundary = getRepository().getEntity(AdministrativeBoundary.class, id);
+            if(boundary != null) {
+                canAccessProject(boundary.getProjectId(), true);
+            }
+            return boundary;
         }
         return null;
     }
@@ -2655,7 +2740,9 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
     //@RolesAllowed({RolesConstants.CS_ACCESS_CS})
     public List<AdministrativeBoundary> getApprovedAdministrativeBoundaries(){
         Map params = new HashMap<String, Object>();
+        getUserName();
         params.put(CommonSqlProvider.PARAM_QUERY, AdministrativeBoundary.QUERY_SELECT_APPROVED);
+        params.put(AdministrativeBoundary.PARAM_USER_NAME, getUserName());
         return getRepository().getEntityList(AdministrativeBoundary.class, params);
     }
     
@@ -2666,6 +2753,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
             throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
         }
 
+        canAccessProject(boundary.getProjectId(), true);
+        
         // Get db boundary
         AdministrativeBoundary dbBoundary = getAdministrativeBoundary(boundary.getId());
 
@@ -2708,8 +2797,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
                 throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_SELF_PARENT);
             }
             // Get child records
-            List<AdministrativeBoundarySearchResult> childBoundaries = searchEjb.searchChildAdministrativeBoundaries(boundary.getId(), null);
-            if (childBoundaries != null && childBoundaries.size() > 0) {
+            List<AdministrativeBoundarySearchResult> childBoundaries = searchEjb.searchChildAdministrativeBoundaries(boundary.getId(), boundary.getProjectId(), null);
+            if (childBoundaries != null && !childBoundaries.isEmpty()) {
                 for (AdministrativeBoundarySearchResult child : childBoundaries) {
                     if (child.getId().equalsIgnoreCase(boundary.getParentId())) {
                         throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_CHILD_PARENT);
@@ -2731,9 +2820,12 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
 
         // Get db boundary
         AdministrativeBoundary dbBoundary = getAdministrativeBoundary(boundaryId);
+        
         if(dbBoundary == null){
             throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
         }
+        
+        canAccessProject(dbBoundary.getProjectId(), true);
         
         // Check status
         if (dbBoundary.getStatusCode().equalsIgnoreCase(AdministrativeBoundaryStatus.STATUS_APPROVED)) {
@@ -2741,7 +2833,7 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         }
 
         // Check children
-        List<AdministrativeBoundarySearchResult> childBoundaries = searchEjb.searchChildAdministrativeBoundaries(boundaryId, null);
+        List<AdministrativeBoundarySearchResult> childBoundaries = searchEjb.searchChildAdministrativeBoundaries(boundaryId, dbBoundary.getProjectId(), null);
         if (childBoundaries != null && childBoundaries.size() > 0) {
             throw new SOLAException(ServiceMessage.OT_WS_BOUNDARY_HAS_CHILD);
         }
@@ -2763,6 +2855,8 @@ public class ClaimEJB extends AbstractEJB implements ClaimEJBLocal {
         if(dbBoundary == null){
             throw new SOLAException(ServiceMessage.GENERAL_OBJECT_IS_NULL);
         }
+        
+        canAccessProject(dbBoundary.getProjectId(), true);
         
         // Check status
         if (dbBoundary.getStatusCode().equalsIgnoreCase(AdministrativeBoundaryStatus.STATUS_APPROVED)) {
